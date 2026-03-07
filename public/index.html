@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sirkil Admin Dashboard</title>
+    <!-- Modern font (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' }
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-800">
+    
+    <!-- AUTH SECTION -->
+    <div id="auth-section" class="flex items-center justify-center min-h-screen">
+      <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-50 mb-4">
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">Admin Portal</h2>
+          <p class="text-slate-500 text-sm mt-2">Log in with your administrator account.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <input type="email" id="email" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="admin@sirkil.com" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <input type="password" id="password" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
+          </div>
+          <button id="login-btn" class="w-full bg-brand-600 text-white font-medium p-3 rounded-lg hover:bg-brand-700 active:bg-brand-900 transition mt-2">Sign In</button>
+          <p id="auth-error" class="text-red-500 text-sm text-center mt-4 hidden"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard-section" class="hidden min-h-screen flex flex-col">
+      <!-- Top Nav -->
+      <nav class="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col sm:flex-row justify-between items-center sm:sticky top-0 z-10 gap-4 sm:gap-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold">S</div>
+          <h1 class="text-xl font-bold text-slate-900">Operations Control</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Admin Role</span>
+          <button id="logout-btn" class="text-sm font-medium text-slate-600 hover:text-red-600 transition">Log Out</button>
+        </div>
+      </nav>
+
+      <div class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- Left Column: Controls -->
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Create Project</h2>
+            <div class="space-y-3">
+              <input type="text" id="project-name" placeholder="Name (e.g. Office)" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+              <button id="create-project-btn" class="w-full bg-slate-900 text-white font-medium p-3 rounded-lg hover:bg-slate-800 transition">Create Project</button>
+              <p id="action-msg" class="text-sm text-center hidden"></p>
+            </div>
+          </div>
+          
+          <div class="bg-brand-50 p-6 rounded-xl border border-brand-100 hidden lg:block">
+             <h3 class="font-semibold text-brand-900 mb-2">How it works</h3>
+             <p class="text-sm text-brand-800">1. Create a Project.<br>2. Select it.<br>3. Queue multiple items.<br>4. Submit batch to Sync.</p>
+          </div>
+        </div>
+
+        <!-- Right Column: Projects & Items -->
+        <div class="lg:col-span-3">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-2 sm:gap-0">
+             <h2 class="text-2xl font-bold text-slate-900">Active Projects</h2>
+             <button id="refresh-projects-btn" class="text-sm text-brand-600 font-medium hover:underline">Refresh List</button>
+          </div>
+
+          <!-- Project Cards Grid -->
+          <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <!-- Project Cards dynamically injected here -->
+            <p id="empty-projects-msg" class="text-slate-500 col-span-full">No projects currently tracked locally. Create one to begin.</p>
+          </div>
+
+          <!-- Active Project Items (Hidden by default) -->
+          <div id="project-details-section" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-50 border-b border-slate-200 p-4 sm:p-6 flex justify-between items-center">
+               <div>
+                  <h3 class="text-xl font-bold text-slate-900" id="detail-project-title">Project Name</h3>
+                  <p class="text-sm text-slate-500">Queue items below to add in batch.</p>
+               </div>
+               <button id="close-details-btn" class="text-slate-400 hover:text-slate-600 p-2">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+               </button>
+            </div>
+            
+            <div class="p-4 sm:p-6">
+              <!-- Add Item Form (Fields Side by side on larger screens, stacked on tiny) -->
+              <div class="flex flex-col md:flex-row gap-3 mb-6 items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div class="flex-1 w-full md:w-auto">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Item Name</label>
+                  <input type="text" id="new-item-name" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g., Cement Bag">
+                </div>
+                <div class="w-full md:w-24">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Qty</label>
+                  <input type="number" id="new-item-qty" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" value="1" min="1">
+                </div>
+                <div class="w-full md:w-32">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est Price</label>
+                  <input type="text" id="new-item-price" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="$10-$20">
+                </div>
+                <div class="w-full md:w-40">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Assign To</label>
+                  <select id="new-item-assign" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                     <option value="">-- Unassigned --</option>
+                  </select>
+                </div>
+                <button id="queue-item-btn" class="w-full md:w-auto bg-slate-200 text-slate-800 font-medium p-2.5 px-6 rounded hover:bg-slate-300 transition h-[42px] mt-2 md:mt-0 whitespace-nowrap">Queue Item</button>
+              </div>
+
+               <div class="flex justify-between items-center mb-3">
+                  <h4 class="font-bold text-slate-700">Pending Items (<span id="pending-count">0</span>)</h4>
+                  <button id="submit-batch-btn" class="bg-brand-600 text-white font-medium p-2 px-4 rounded hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>Submit Batch to Server</button>
+               </div>
+
+              <!-- List of Queued Items -->
+              <div id="items-list" class="space-y-3 min-h-[100px] border-t border-slate-100 pt-3">
+                 <p id="empty-queue-msg" class="text-slate-500 text-sm py-4 italic text-center">No items queued. Add items above.</p>
+              </div>
+
+              <!-- Active Project Existing Items -->
+              <div class="mt-8 border-t border-slate-200 pt-6">
+                 <h4 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Existing Items
+                 </h4>
+                 <div id="existing-items-list" class="space-y-3">
+                    <p class="text-slate-500 text-sm italic">Loading existing items...</p>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Users Section -->
+          <div class="mt-12 flex flex-col justify-between items-start mb-6">
+             <h2 class="text-2xl font-bold text-slate-900">Active Users</h2>
+          </div>
+          <!-- User Cards Grid -->
+          <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <p id="empty-users-msg" class="text-slate-500 col-span-full">Loading users...</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div id="edit-item-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity" aria-hidden="true" id="edit-modal-bg"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Edit Item</h3>
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Item Name</label>
+                    <input type="text" id="edit-item-name" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
+                  </div>
+                  <div class="flex gap-4">
+                    <div class="w-1/3">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Qty</label>
+                      <input type="number" id="edit-item-qty" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" min="1">
+                    </div>
+                    <div class="w-2/3">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Est Price</label>
+                      <input type="text" id="edit-item-price" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                  </div>
+                  <div>
+                     <label class="block text-sm font-medium text-slate-700 mb-1">Assign To</label>
+                     <select id="edit-item-assign" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                        <option value="">-- Unassigned --</option>
+                        <!-- Dynamic user options -->
+                     </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button type="button" id="save-edit-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-600 text-base font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm">Save Changes</button>
+            <button type="button" id="cancel-edit-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="user-details-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="user-modal-title" role="dialog" aria-modal="true">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity" aria-hidden="true" id="user-modal-bg"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+          <div class="bg-slate-50 border-b border-slate-200 px-4 py-4 sm:px-6 flex justify-between items-center">
+             <div>
+                <h3 class="text-xl font-bold text-slate-900" id="user-modal-title">User Name</h3>
+                <p class="text-sm font-medium text-brand-600 mt-1">Balance: <span id="user-modal-balance">$0</span></p>
+             </div>
+             <button id="close-user-modal-btn" class="text-slate-400 hover:text-slate-600 p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+             </button>
+          </div>
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+             <h4 class="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wider">Assigned Items</h4>
+             <div id="user-assigned-items" class="space-y-3 max-h-[40vh] overflow-y-auto">
+                 <p class="text-slate-500 text-sm italic">Loading items...</p>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase App/Auth Logic -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+      import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyDvGSwwc5-oY49AdPT_G4a_5NmmSnsmbyU",
+        authDomain: "sirkil-operation-expenses.firebaseapp.com",
+        projectId: "sirkil-operation-expenses",
+        storageBucket: "sirkil-operation-expenses.firebasestorage.app",
+        messagingSenderId: "76114714089",
+        appId: "1:76114714089:web:1da952ab54d984527a3f78"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      // DOM Elements
+      const ui = {
+        sections: { auth: document.getElementById("auth-section"), dash: document.getElementById("dashboard-section"), details: document.getElementById("project-details-section") },
+        auth: { email: document.getElementById("email"), pass: document.getElementById("password"), btn: document.getElementById("login-btn"), err: document.getElementById("auth-error"), out: document.getElementById("logout-btn") },
+        proj: { name: document.getElementById("project-name"), btn: document.getElementById("create-project-btn"), msg: document.getElementById("action-msg"), grid: document.getElementById("projects-grid"), empty: document.getElementById("empty-projects-msg"), refresh: document.getElementById("refresh-projects-btn") },
+        item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), price: document.getElementById("new-item-price"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
+        users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
+        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), price: document.getElementById("edit-item-price"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn") },
+        userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
+      };
+
+      let currentUserToken = null;
+      let currentUserEmail = null;
+      let activeProject = null;
+      
+      let localProjects = [];
+      let pendingItems = [];
+      let syncedData = []; // Full synced JSON payload
+      let syncedUsers = []; // Users payload
+      
+      let editingItemContext = null; // tracking which item is being edited
+
+      // --- AUTH FLOW ---
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com" , "omar@sirkil.com" , "amr@sirkil.com"];
+          
+          if (!authorizedAdmins.includes(user.email)) {
+             signOut(auth);
+             ui.auth.err.textContent = "Access denied. Admin role required.";
+             ui.auth.err.classList.remove("hidden");
+             return;
+          }
+          currentUserToken = await user.getIdToken();
+          currentUserEmail = user.email;
+          ui.sections.auth.classList.add("hidden");
+          ui.sections.dash.classList.remove("hidden");
+          loadData(); // Fetch projects from server
+        } else {
+          currentUserToken = null;
+          currentUserEmail = null;
+          ui.sections.auth.classList.remove("hidden");
+          ui.sections.dash.classList.add("hidden");
+        }
+      });
+
+      ui.auth.btn.addEventListener("click", () => {
+        ui.auth.err.classList.add("hidden");
+        signInWithEmailAndPassword(auth, ui.auth.email.value, ui.auth.pass.value)
+          .catch(e => { ui.auth.err.textContent = e.message; ui.auth.err.classList.remove("hidden"); });
+      });
+
+      ui.auth.out.addEventListener("click", () => signOut(auth));
+
+      // --- PROJECT FLOW ---
+      async function loadData() {
+        if (!currentUserToken) return;
+        ui.proj.grid.innerHTML = '<p class="text-slate-500 col-span-full">Loading existing projects...</p>';
+        ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Loading users...</p>';
+        try {
+          const res = await fetch("/api/sync", {
+            headers: { "Authorization": `Bearer ${currentUserToken}` }
+          });
+          if (res.ok) {
+             const data = await res.json();
+             if (data.status === 'success') {
+                syncedData = data.data || [];
+                // If users are returned in the response, capture them. Otherwise, default to empty array.
+                syncedUsers = data.users || []; 
+                
+                localProjects = syncedData.map(p => p.projectName);
+                renderProjects();
+                renderUsers();
+                populateAssignDropdowns();
+                if (activeProject) renderExistingItems(activeProject);
+             } else {
+                ui.proj.grid.innerHTML = `<p class="text-red-500 col-span-full">Error: ${data.message}</p>`;
+             }
+          } else {
+            ui.proj.grid.innerHTML = `<p class="text-red-500 col-span-full">Failed to fetch data</p>`;
+          }
+        } catch (e) {
+          ui.proj.grid.innerHTML = `<p class="text-red-500 col-span-full">Error: ${e.message}</p>`;
+        }
+      }
+
+      ui.proj.refresh.addEventListener("click", () => {
+         loadData();
+      });
+
+      ui.proj.btn.addEventListener("click", async () => {
+        const name = ui.proj.name.value.trim();
+        if (!name || !currentUserToken) return;
+
+        ui.proj.btn.disabled = true;
+        ui.proj.btn.innerText = "Creating...";
+
+        try {
+          const res = await fetch("/api/project/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
+            body: JSON.stringify({ projectName: name, initialItems: [] }) 
+          });
+
+          if (res.ok) {
+            localProjects.push(name);
+            renderProjects();
+            ui.proj.name.value = "";
+            showMessage("Project created! Select it to add items.", true);
+          } else { throw new Error(await res.text()); }
+        } catch (e) { showMessage(e.message, false); }
+        finally { ui.proj.btn.disabled = false; ui.proj.btn.innerText = "Create Project"; }
+      });
+
+      function renderProjects() {
+         ui.proj.grid.innerHTML = "";
+         if (localProjects.length === 0) {
+            ui.proj.empty.classList.remove("hidden");
+            return;
+         }
+         ui.proj.empty.classList.add("hidden");
+         
+         localProjects.forEach(p => {
+            const card = document.createElement("div");
+            card.className = "bg-white border border-slate-200 p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md hover:border-brand-300 transition cursor-pointer group";
+            card.innerHTML = `
+              <div class="flex justify-between items-start mb-4">
+                 <div class="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-lg group-hover:bg-brand-600 group-hover:text-white transition">${p.charAt(0).toUpperCase()}</div>
+              </div>
+              <h3 class="font-bold text-slate-800 text-lg mb-1 truncate">${p}</h3>
+              <p class="text-sm text-slate-500">Tap to manage items</p>
+            `;
+            card.addEventListener("click", () => openProject(p));
+            ui.proj.grid.appendChild(card);
+         });
+      }
+
+      function renderUsers() {
+         ui.users.grid.innerHTML = "";
+         if (syncedUsers.length === 0) {
+            ui.users.empty.classList.remove("hidden");
+            ui.users.empty.textContent = "No users found.";
+            return;
+         }
+         ui.users.empty.classList.add("hidden");
+         
+         syncedUsers.forEach(user => {
+            const card = document.createElement("div");
+            card.className = "bg-white border border-slate-200 p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md hover:border-brand-300 transition cursor-pointer group flex flex-col items-center text-center";
+            card.innerHTML = `
+              <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xl mb-3">${user.name ? user.name.charAt(0).toUpperCase() : '?'}</div>
+              <h3 class="font-bold text-slate-800 text-md truncate w-full">${user.name || 'Unknown'}</h3>
+              <p class="text-sm text-brand-600 font-medium">Balance: $${user.balance || 0}</p>
+            `;
+            card.addEventListener("click", () => openUserModal(user));
+            ui.users.grid.appendChild(card);
+         });
+      }
+
+      function populateAssignDropdowns() {
+         const options = '<option value="">-- Unassigned --</option>' + 
+            syncedUsers.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+         ui.item.assign.innerHTML = options;
+         ui.editModal.assign.innerHTML = options;
+      }
+
+      function openUserModal(user) {
+         ui.userModal.title.textContent = user.name || 'Unknown';
+         ui.userModal.balance.textContent = `$${user.balance || 0}`;
+         ui.userModal.items.innerHTML = "";
+
+         const assignedItems = [];
+         syncedData.forEach(p => {
+             if (p.items) {
+                 p.items.forEach(i => {
+                     if (i.assignedTo === user.name) {
+                         assignedItems.push({ project: p.projectName, item: i });
+                     }
+                 });
+             }
+         });
+
+         if (assignedItems.length === 0) {
+             ui.userModal.items.innerHTML = '<p class="text-slate-500 text-sm italic">No items assigned to this user.</p>';
+         } else {
+             assignedItems.forEach(ai => {
+                 const el = document.createElement("div");
+                 el.className = "p-3 border border-slate-200 rounded-lg bg-white shadow-sm flex flex-col";
+                 el.innerHTML = `
+                     <div class="flex justify-between items-start">
+                         <strong class="text-slate-800">${ai.item.itemName} <span class="text-slate-500 font-normal ml-1">x${ai.item.qty}</span></strong>
+                         <span class="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded">${ai.item.estPriceRange || '-'}</span>
+                     </div>
+                     <div class="text-xs text-brand-600 mt-1">Project: ${ai.project}</div>
+                     <div class="text-xs text-slate-400 mt-1">Status: ${ai.item.status}</div>
+                 `;
+                 ui.userModal.items.appendChild(el);
+             });
+         }
+
+         ui.userModal.el.classList.remove("hidden");
+      }
+
+      ui.userModal.btnClose.addEventListener("click", () => ui.userModal.el.classList.add("hidden"));
+      ui.userModal.bg.addEventListener("click", () => ui.userModal.el.classList.add("hidden"));
+
+      function openProject(name) {
+         activeProject = name;
+         ui.item.title.textContent = activeProject;
+         ui.sections.details.classList.remove("hidden");
+         pendingItems = []; // reset queue on open
+         renderQueue();
+         renderExistingItems(name);
+         // scroll to it on mobile
+         ui.sections.details.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      function renderExistingItems(projectName) {
+         const listDiv = ui.item.existing;
+         const project = syncedData.find(p => p.projectName === projectName);
+         
+         if (!project || !project.items || project.items.length === 0) {
+            listDiv.innerHTML = '<p class="text-slate-500 text-sm italic">No items found in this project.</p>';
+            return;
+         }
+
+         listDiv.innerHTML = '';
+         project.items.forEach(item => {
+             const itemRow = document.createElement("div");
+             // Add visual indicator if bought
+              const isBought = item.status === 'Bought';
+             const bgColor = isBought ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200';
+             itemRow.className = `flex justify-between items-center p-3 border rounded-md shadow-sm ${bgColor}`;
+             itemRow.innerHTML = `
+                <div class="flex-1 truncate pr-2">
+                   <strong class="text-slate-800">${item.itemName}</strong> <span class="text-slate-500 text-sm ml-2">x${item.qty}</span>
+                   <div class="text-xs text-slate-400 mt-1">Status: ${item.status} | Assigned: <span class="text-brand-600">${item.assignedTo || 'None'}</span></div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                   <div class="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded inline-block">${item.estPriceRange || '-'}</div>
+                   <button class="text-xs text-brand-600 hover:underline px-2 py-1" onclick="openEditItemModal('${projectName}','${item.itemName.replace(/'/g, "\\'")}', ${item.qty}, '${item.estPriceRange.replace(/'/g, "\\'")}', '${(item.assignedTo || '').replace(/'/g, "\\'")}')">Edit</button>
+                </div>
+             `;
+             listDiv.appendChild(itemRow);
+         });
+      }
+
+      window.openEditItemModal = function(projectName, itemName, qty, price, assignedTo) {
+          editingItemContext = { projectName, oldItemName: itemName };
+          ui.editModal.name.value = itemName;
+          ui.editModal.qty.value = qty;
+          ui.editModal.price.value = price;
+          ui.editModal.assign.value = assignedTo || "";
+          
+          ui.editModal.el.classList.remove("hidden");
+      }
+
+      ui.editModal.btnCancel.addEventListener("click", () => {
+          ui.editModal.el.classList.add("hidden");
+          editingItemContext = null;
+      });
+      ui.editModal.bg.addEventListener("click", () => {
+          ui.editModal.el.classList.add("hidden");
+          editingItemContext = null;
+      });
+
+      ui.editModal.btnSave.addEventListener("click", () => {
+          if (!editingItemContext) return;
+          
+          const newName = ui.editModal.name.value.trim();
+          const newQty = parseInt(ui.editModal.qty.value) || 1;
+          const newPrice = ui.editModal.price.value.trim();
+          const newAssign = ui.editModal.assign.value;
+
+          if (!newName) {
+              alert("Item name is required.");
+              return;
+          }
+
+          ui.editModal.btnSave.disabled = true;
+          ui.editModal.btnSave.textContent = "Saving...";
+
+          submitEdit(editingItemContext.projectName, editingItemContext.oldItemName, newName, newQty, newPrice, newAssign);
+      });
+
+      async function submitEdit(projectName, oldItemName, newItemName, newQty, newPrice, assignedTo) {
+         try {
+           ui.item.existing.innerHTML = '<p class="text-slate-500 text-sm italic">Saving changes...</p>';
+           const res = await fetch("/api/project/edit-item", {
+             method: "POST",
+             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
+             body: JSON.stringify({ projectName, oldItemName, newItemName, qty: newQty, estPriceRange: newPrice, assignedTo })
+           });
+           if (res.ok) {
+             ui.editModal.el.classList.add("hidden");
+             loadData(); // reload all data to get fresh values
+           } else {
+             alert("Failed to update: " + await res.text());
+             renderExistingItems(projectName); // revert to existing state
+           }
+         } catch(e) { 
+            alert("Error: " + e.message); 
+            renderExistingItems(projectName);
+         } finally {
+            ui.editModal.btnSave.disabled = false;
+            ui.editModal.btnSave.textContent = "Save Changes";
+         }
+      }
+
+      ui.item.close.addEventListener("click", () => {
+         ui.sections.details.classList.add("hidden");
+         activeProject = null;
+         pendingItems = [];
+      });
+
+      // --- QUEUE & BATCH LOGIC ---
+      ui.item.btnQueue.addEventListener("click", () => {
+         const itemName = ui.item.name.value.trim();
+         const qty = parseInt(ui.item.qty.value) || 1;
+         const estPrice = ui.item.price.value.trim();
+         const assignedTo = ui.item.assign.value;
+         
+         if (!itemName) return;
+
+         pendingItems.push({ itemName, qty, estPriceRange: estPrice, assignedTo, id: Date.now() });
+         
+         ui.item.name.value = ""; ui.item.qty.value = "1"; ui.item.price.value = ""; ui.item.assign.value = "";
+         ui.item.name.focus();
+         renderQueue();
+      });
+
+      function renderQueue() {
+         ui.item.count.textContent = pendingItems.length;
+         ui.item.btnSubmit.disabled = pendingItems.length === 0;
+         
+         // Select all elements with class 'queued-item' and remove them
+         const existingItems = ui.item.list.querySelectorAll('.queued-item');
+         existingItems.forEach(el => el.remove());
+
+         if (pendingItems.length === 0) {
+            ui.item.emptyQueue.classList.remove("hidden");
+            return;
+         }
+         ui.item.emptyQueue.classList.add("hidden");
+
+         pendingItems.forEach(item => {
+             const itemRow = document.createElement("div");
+             itemRow.className = "queued-item flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm";
+             itemRow.innerHTML = `
+                <div class="flex-1 truncate pr-2">
+                   <span class="font-semibold text-slate-800">${item.itemName}</span> <span class="text-slate-500 text-sm ml-2">x${item.qty}</span>
+                   <div class="text-xs text-slate-400 mt-1">Assigned: <span class="text-brand-600">${item.assignedTo || 'None'}</span></div>
+                </div>
+                <div class="flex items-center gap-3">
+                   <div class="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded whitespace-nowrap">${item.estPriceRange || '-'}</div>
+                   <button class="text-red-400 hover:text-red-600" onclick="removeItem(${item.id})">
+                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                   </button>
+                </div>
+             `;
+             ui.item.list.appendChild(itemRow);
+         });
+      }
+
+      window.removeItem = function(id) {
+         pendingItems = pendingItems.filter(i => i.id !== id);
+         renderQueue();
+      }
+
+      ui.item.btnSubmit.addEventListener("click", async () => {
+         if (!activeProject || !currentUserToken || pendingItems.length === 0) return;
+
+         ui.item.btnSubmit.disabled = true;
+         ui.item.btnSubmit.innerText = "Submitting...";
+
+         try {
+           const itemsToSend = pendingItems.map(({ id, ...rest }) => rest); // remove temp ids
+           const res = await fetch("/api/project/create", {
+             method: "POST",
+             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
+             body: JSON.stringify({ projectName: activeProject, initialItems: itemsToSend })
+           });
+
+           if (res.ok) {
+             alert(`Successfully added ${pendingItems.length} items to ${activeProject}!`);
+             pendingItems = []; // clear queue
+             renderQueue();
+             loadData(); // Reload existing items
+           } else { throw new Error(await res.text()); }
+         } catch (e) { alert("Failed to submit batch: " + e.message); }
+         finally { ui.item.btnSubmit.innerText = "Submit Batch to Server"; renderQueue(); }
+      });
+
+      function showMessage(msg, isSuccess) {
+         ui.proj.msg.textContent = msg;
+         ui.proj.msg.className = `text-sm text-center mt-3 ${isSuccess ? 'text-green-600' : 'text-red-600'}`;
+         ui.proj.msg.classList.remove("hidden");
+         setTimeout(() => ui.proj.msg.classList.add("hidden"), 4000);
+      }
+    </script>
+  </body>
+</html>
