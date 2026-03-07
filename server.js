@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/app', express.static(path.join(__dirname, 'public/app')));
 
 // Replace with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTgnzxB3gInQJEk1ANE9SQsSxLWoaEOOqpXL0cqT5VCMARWpBc5c12IzgQo1apU7SS/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMo5lnJkdTmcS-GLzkhRyS87BzIgQwXSQm0mzrv_DxgqF0AKdr2iVqrz6mkJUhB3No/exec';
 
 // Middleware to verify Firebase ID Token from the Flutter App
 const verifyToken = async (req, res, next) => {
@@ -188,6 +188,34 @@ app.get('/api/sync', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error syncing projects:', error);
     res.status(500).json({ error: 'Failed to sync projects from backend' });
+  }
+});
+
+// Endpoint to securely proxy POST requests to Personal Apps Scripts
+app.post('/api/proxy/post', verifyToken, async (req, res) => {
+  try {
+    const { scriptUrl, payload } = req.body;
+    if (!scriptUrl) return res.status(400).send('Missing scriptUrl');
+    
+    const response = await axios.post(scriptUrl, payload);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error proxying POST to GAS:', error);
+    res.status(500).json({ error: 'Proxy POST failed' });
+  }
+});
+
+// Endpoint to securely proxy GET requests to Personal Apps Scripts
+app.get('/api/proxy/get', verifyToken, async (req, res) => {
+  try {
+    const { scripturl } = req.headers;
+    if (!scripturl) return res.status(400).send('Missing scripturl header');
+    
+    const response = await axios.get(scripturl);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error proxying GET to GAS:', error);
+    res.status(500).json({ error: 'Proxy GET failed' });
   }
 });
 
