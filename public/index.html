@@ -280,7 +280,9 @@
           const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com" , "omar@sirkil.com" , "amr@sirkil.com"];
           
           if (!authorizedAdmins.includes(user.email)) {
-             signOut(auth);
+             // Do not call signOut(auth) as it cascades to the flutter app on the same domain
+             ui.sections.dash.classList.add("hidden");
+             ui.sections.auth.classList.remove("hidden");
              ui.auth.err.textContent = "Access denied. Admin role required.";
              ui.auth.err.classList.remove("hidden");
              return;

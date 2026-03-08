@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/app', express.static(path.join(__dirname, 'public/app')));
 
 // Replace with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwbKlJx129tied-Yxz_iTk96mMBSqrsPcEA-2C7WyNmCjj2dQBdTg9AGzC1ARy7SHfb/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMo5lnJkdTmcS-GLzkhRyS87BzIgQwXSQm0mzrv_DxgqF0AKdr2iVqrz6mkJUhB3No/exec';
 
 // Middleware to verify Firebase ID Token from the Flutter App
 const verifyToken = async (req, res, next) => {
@@ -90,7 +90,7 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
     // Extract the admin's email directly from the verified Firebase Auth token
     const adminEmail = req.user.email; 
 
-    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com'];
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com'];
 
     // Optional: Add a strict role check to ensure only admins can trigger this.
     // You can hardcode your admin email or check a database role.
@@ -132,7 +132,7 @@ app.post('/api/project/edit-item', verifyToken, async (req, res) => {
     const { projectName, oldItemName, newItemName, qty, estPriceRange, assignedTo } = req.body;
     const adminEmail = req.user.email; 
 
-    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com'];
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com'];
 
     if (!authorizedAdmins.includes(adminEmail)) {
        return res.status(403).send('Forbidden: Admin access required');
@@ -184,7 +184,49 @@ app.post('/api/add-money', verifyToken, async (req, res) => {
 app.get('/api/sync', verifyToken, async (req, res) => {
   try {
     const response = await axios.get(APPS_SCRIPT_URL);
-    res.status(200).json(response.data);
+    
+    // Fetch users from Firebase Auth
+    const listUsersResult = await admin.auth().listUsers(1000);
+    const firebaseUsers = listUsersResult.users.map(userRecord => ({
+      uid: userRecord.uid,
+      email: userRecord.email,
+      name: userRecord.displayName || 'Unknown',
+      role: 'User' // Default role
+    }));
+
+    // Data from Google Sheets
+    let sheetData = response.data;
+    let sheetUsers = [];
+    let sheetProjects = [];
+
+    if (sheetData.status === 'success') {
+       if (sheetData.data && Array.isArray(sheetData.data.projects)) {
+          sheetProjects = sheetData.data.projects;
+          sheetUsers = sheetData.data.users || [];
+       } else {
+          sheetProjects = Array.isArray(sheetData.data) ? sheetData.data : [];
+          sheetUsers = sheetData.users || [];
+       }
+    }
+
+    // Merge users: Use Firebase Users as the base, and attach balance if present in Google Sheets
+    // The admin dashboard and flutter app expects an array of users with name, email, and balance
+    const mergedUsers = firebaseUsers.map(fbUser => {
+       const matchedSheetUser = sheetUsers.find(su => su.email === fbUser.email || (su.name && su.name.toLowerCase() === fbUser.name.toLowerCase()));
+       return {
+          ...fbUser,
+          balance: matchedSheetUser ? matchedSheetUser.balance : 0
+       };
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        projects: sheetProjects,
+        users: mergedUsers
+      }
+    });
+
   } catch (error) {
     console.error('Error syncing projects:', error);
     res.status(500).json({ error: 'Failed to sync projects from backend' });
@@ -227,5 +269,4 @@ app.get(/^\/app.*/, (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Node.js middleware running on port ${PORT}`);
-
 });
