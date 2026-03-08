@@ -318,9 +318,13 @@
           if (res.ok) {
              const data = await res.json();
              if (data.status === 'success') {
-                syncedData = data.data || [];
-                // If users are returned in the response, capture them. Otherwise, default to empty array.
-                syncedUsers = data.users || []; 
+                if (data.data && Array.isArray(data.data.projects)) {
+                   syncedData = data.data.projects;
+                   syncedUsers = data.data.users || [];
+                } else {
+                   syncedData = Array.isArray(data.data) ? data.data : [];
+                   syncedUsers = data.users || [];
+                } 
                 
                 localProjects = syncedData.map(p => p.projectName);
                 renderProjects();
