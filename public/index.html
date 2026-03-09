@@ -235,10 +235,10 @@
       </div>
     </div>
 
-    <!-- Firebase App/Auth Logic -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+      import { getFirestore, collection, collectionGroup, onSnapshot, query, orderBy, doc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
       
       const firebaseConfig = {
         apiKey: "AIzaSyDvGSwwc5-oY49AdPT_G4a_5NmmSnsmbyU",
@@ -251,6 +251,8 @@
 
       const app = initializeApp(firebaseConfig, "AdminPortal");
       const auth = getAuth(app);
+      setPersistence(auth, browserSessionPersistence);
+      const db = getFirestore(app);
 
       // DOM Elements
       const ui = {
@@ -269,8 +271,9 @@
       
       let localProjects = [];
       let pendingItems = [];
-      let syncedData = []; // Full synced JSON payload
-      let syncedUsers = []; // Users payload
+      let syncedData = []; // Rebuilt structure
+      let syncedUsers = []; 
+      let allItems = []; // Flat list of all items from Firestore
       
       let editingItemContext = null; // tracking which item is being edited
 
@@ -309,39 +312,50 @@
       ui.auth.out.addEventListener("click", () => signOut(auth));
 
       // --- PROJECT FLOW ---
-      async function loadData() {
+      let unsubProjects = null;
+      let unsubUsers = null;
+      let unsubItems = null;
+
+      function buildSyncedData() {
+         syncedData = localProjects.map(pName => {
+            return {
+               projectName: pName,
+               items: allItems.filter(i => i.projectId === pName)
+            };
+         });
+         renderProjects();
+         renderUsers(); 
+         populateAssignDropdowns();
+         if (activeProject) renderExistingItems(activeProject);
+      }
+
+      function loadData() {
         if (!currentUserToken) return;
-        ui.proj.grid.innerHTML = '<p class="text-slate-500 col-span-full">Loading existing projects...</p>';
-        ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Loading users...</p>';
-        try {
-          const res = await fetch("/api/sync", {
-            headers: { "Authorization": `Bearer ${currentUserToken}` }
-          });
-          if (res.ok) {
-             const data = await res.json();
-             if (data.status === 'success') {
-                if (data.data && Array.isArray(data.data.projects)) {
-                   syncedData = data.data.projects;
-                   syncedUsers = data.data.users || [];
-                } else {
-                   syncedData = Array.isArray(data.data) ? data.data : [];
-                   syncedUsers = data.users || [];
-                } 
-                
-                localProjects = syncedData.map(p => p.projectName);
-                renderProjects();
-                renderUsers();
-                populateAssignDropdowns();
-                if (activeProject) renderExistingItems(activeProject);
-             } else {
-                ui.proj.grid.innerHTML = `<p class="text-red-500 col-span-full">Error: ${data.message}</p>`;
-             }
-          } else {
-            ui.proj.grid.innerHTML = `<p class="text-red-500 col-span-full">Failed to fetch data</p>`;
-          }
-        } catch (e) {
-          ui.proj.grid.innerHTML = `<p class="text-red-500 col-span-full">Error: ${e.message}</p>`;
-        }
+        ui.proj.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
+        ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
+
+        if (unsubUsers) unsubUsers();
+        if (unsubProjects) unsubProjects();
+        if (unsubItems) unsubItems();
+
+        unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+           syncedUsers = snapshot.docs.map(doc => ({ email: doc.id, ...doc.data() }));
+           buildSyncedData();
+        });
+
+        const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
+        unsubProjects = onSnapshot(qProjects, (snapshot) => {
+           localProjects = snapshot.docs.map(doc => doc.id);
+           buildSyncedData();
+        });
+
+        unsubItems = onSnapshot(collectionGroup(db, "items"), (snapshot) => {
+           allItems = snapshot.docs.map(doc => {
+              const pName = doc.ref.parent.parent.id;
+              return { projectId: pName, itemName: doc.data().name, ...doc.data() };
+           });
+           buildSyncedData();
+        });
       }
 
       ui.proj.refresh.addEventListener("click", () => {
@@ -363,8 +377,6 @@
           });
 
           if (res.ok) {
-            localProjects.push(name);
-            renderProjects();
             ui.proj.name.value = "";
             showMessage("Project created! Select it to add items.", true);
           } else { throw new Error(await res.text()); }
@@ -553,10 +565,8 @@
            });
            if (res.ok) {
              ui.editModal.el.classList.add("hidden");
-             loadData(); // reload all data to get fresh values
            } else {
              alert("Failed to update: " + await res.text());
-             renderExistingItems(projectName); // revert to existing state
            }
          } catch(e) { 
             alert("Error: " + e.message); 

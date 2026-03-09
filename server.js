@@ -17,6 +17,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
 }
 
 admin.initializeApp({ credential });
+const db = admin.firestore();
 
 const app = express();
 app.use(cors());
@@ -120,41 +121,124 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
         sheetResponse: response.data 
     });
 
+    // Dual-write to Firestore
+    try {
+      const projectRef = db.collection('projects').doc(projectName);
+      await projectRef.set({
+        name: projectName,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      if (initialItems && initialItems.length > 0) {
+        const batch = db.batch();
+        initialItems.forEach(item => {
+          const itemRef = projectRef.collection('items').doc();
+          batch.set(itemRef, {
+            name: item.itemName,
+            qty: parseInt(item.qty) || 1,
+            estPriceRange: item.estPriceRange || '',
+            status: 'Searching',
+            assignedTo: item.assignedTo || '',
+            piecePrice: 0,
+            totalPrice: 0
+          });
+        });
+        await batch.commit();
+      }
+    } catch (fsError) {
+      console.error('Firestore project creation error:', fsError);
+    }
+
   } catch (error) {
     console.error('Error creating project tabs:', error);
     res.status(500).send('Internal Server Error: Failed to create project sheets');
   }
 });
 
-// Endpoint: Edit an existing item's quantity/price (Admin Only)
+// Helper for Firestore
+async function updateFirestoreItem(projectName, oldItemName, updates) {
+  try {
+    const itemsRef = db.collection('projects').doc(projectName).collection('items');
+    const snapshot = await itemsRef.where('name', '==', oldItemName).get();
+    if (snapshot.empty) return; // Item not found
+
+    const batch = db.batch();
+    snapshot.forEach(doc => {
+      batch.update(doc.ref, updates);
+    });
+    await batch.commit();
+  } catch(e) { console.error('Firestore Update Error:', e); }
+}
+
+// Endpoint: Edit an existing item/claim item/update status
 app.post('/api/project/edit-item', verifyToken, async (req, res) => {
   try {
-    const { projectName, oldItemName, newItemName, qty, estPriceRange, assignedTo } = req.body;
-    const adminEmail = req.user.email; 
-
-    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com'];
-
-    if (!authorizedAdmins.includes(adminEmail)) {
-       return res.status(403).send('Forbidden: Admin access required');
-    }
+    const userEmail = req.user.email; 
 
     const payload = {
+      ...req.body,
       action: "editItem",
-      projectName,
-      adminEmail,
-      oldItemName,
-      newItemName,
-      qty,
-      estPriceRange,
-      assignedTo
+      adminEmail: userEmail // Track who edited it
     };
 
     const response = await axios.post(APPS_SCRIPT_URL, payload);
     res.status(200).json(response.data);
 
+    // Dual-write to Firestore
+    if (!req.body.skipFirestore) {
+      const { projectName, oldItemName, newItemName, qty, estPriceRange, assignedTo, status } = req.body;
+      let updates = {};
+      if (newItemName !== undefined) updates.name = newItemName;
+      if (qty !== undefined) updates.qty = parseInt(qty);
+      if (estPriceRange !== undefined) updates.estPriceRange = estPriceRange;
+      if (assignedTo !== undefined) updates.assignedTo = assignedTo;
+      if (status !== undefined) updates.status = status;
+      
+      if (Object.keys(updates).length > 0) {
+        await updateFirestoreItem(projectName, oldItemName || req.body.itemName, updates);
+      }
+    }
+
   } catch (error) {
     console.error('Error editing item:', error);
     res.status(500).send('Internal Server Error: Failed to edit item');
+  }
+});
+
+// Endpoint: Log a purchase and final price to the Master Sheet
+app.post('/api/project/log-purchase', verifyToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email; 
+
+    const payload = {
+      ...req.body,
+      action: "logPurchase",
+      adminEmail: userEmail
+    };
+
+    const response = await axios.post(APPS_SCRIPT_URL, payload);
+    res.status(200).json(response.data);
+
+    // Dual-write to Firestore
+    if (!req.body.skipFirestore) {
+      const { projectName, itemName, qty, piecePrice, totalPrice, status, invoiceUrl } = req.body;
+      await updateFirestoreItem(projectName, itemName, {
+        qty: parseInt(qty) || 0,
+        piecePrice: parseFloat(piecePrice) || 0,
+        totalPrice: parseFloat(totalPrice) || 0,
+        status: status || 'Bought',
+        invoiceUrl: invoiceUrl || ''
+      });
+
+      if (totalPrice) {
+        const userRef = db.collection('users').doc(userEmail);
+        await userRef.set({ balance: admin.firestore.FieldValue.increment(-parseFloat(totalPrice)) }, { merge: true });
+      }
+    }
+
+  } catch (error) {
+    console.error('Error logging purchase:', error);
+    res.status(500).send('Internal Server Error: Failed to log purchase');
   }
 });
 
@@ -174,6 +258,14 @@ app.post('/api/add-money', verifyToken, async (req, res) => {
     });
 
     res.json(response.data);
+
+    // Dual-write to Firestore
+    if (!req.body.skipFirestore) {
+      if (amount) {
+        const userRef = db.collection('users').doc(userEmail);
+        await userRef.set({ balance: admin.firestore.FieldValue.increment(parseFloat(amount)) }, { merge: true });
+      }
+    }
   } catch (error) {
     console.error('Error adding money:', error);
     res.status(500).json({ error: 'Failed to log added money' });
