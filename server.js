@@ -138,7 +138,10 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
           batch.set(itemRef, {
             name: item.itemName,
             qty: parseInt(item.qty) || 1,
-            estPriceRange: item.estPriceRange || '',
+            estPriceRange: item.estPriceRange || (item.estPriceFrom && item.estPriceTo ? `$${item.estPriceFrom}-$${item.estPriceTo}` : ''),
+            estPriceFrom: parseFloat(item.estPriceFrom) || 0,
+            estPriceTo: parseFloat(item.estPriceTo) || 0,
+            referenceImageBase64: item.referenceImageBase64 || '',
             status: 'Searching',
             assignedTo: '',
             piecePrice: 0,
@@ -395,6 +398,56 @@ app.delete('/api/project/delete', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error deleting project:', error);
     res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+// Endpoint: Log a Deposit
+app.post('/api/project/log-deposit', verifyToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const payload = {
+      ...req.body,
+      action: "logDeposit",
+      userEmail: userEmail
+    };
+
+    const response = await axios.post(APPS_SCRIPT_URL, payload);
+    
+    // Deduct from Firestore user balance
+    if (!req.body.skipFirestore && payload.depositAmount) {
+      const userRef = db.collection('users').doc(userEmail);
+      await userRef.set({ balance: admin.firestore.FieldValue.increment(-parseFloat(payload.depositAmount)) }, { merge: true });
+    }
+    
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error logging deposit:', error);
+    res.status(500).send('Internal Server Error: Failed to log deposit');
+  }
+});
+
+// Endpoint: Log an Ad-hoc Project Cash Expense
+app.post('/api/project/log-expense', verifyToken, async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const payload = {
+      ...req.body,
+      action: "logExpense",
+      userEmail: userEmail
+    };
+
+    const response = await axios.post(APPS_SCRIPT_URL, payload);
+    
+    // Deduct from Firestore user balance
+    if (!req.body.skipFirestore && payload.amount) {
+      const userRef = db.collection('users').doc(userEmail);
+      await userRef.set({ balance: admin.firestore.FieldValue.increment(-parseFloat(payload.amount)) }, { merge: true });
+    }
+    
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error logging expense:', error);
+    res.status(500).send('Internal Server Error: Failed to log expense');
   }
 });
 

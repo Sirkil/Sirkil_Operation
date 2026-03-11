@@ -126,9 +126,17 @@
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Qty</label>
                   <input type="number" id="new-item-qty" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" value="1" min="1">
                 </div>
-                <div class="w-full md:w-32">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est Price</label>
-                  <input type="text" id="new-item-price" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="$10-$20">
+                <div class="w-full md:w-20">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est From</label>
+                  <input type="number" id="new-item-price-from" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="$10">
+                </div>
+                <div class="w-full md:w-20">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est To</label>
+                  <input type="number" id="new-item-price-to" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="$20">
+                </div>
+                <div class="w-full md:w-48">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ref Image</label>
+                  <input type="file" id="new-item-image" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white">
                 </div>
                 <div class="w-full md:w-40">
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Assign To</label>
@@ -195,10 +203,18 @@
                       <label class="block text-sm font-medium text-slate-700 mb-1">Qty</label>
                       <input type="number" id="edit-item-qty" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" min="1">
                     </div>
-                    <div class="w-2/3">
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Est Price</label>
-                      <input type="text" id="edit-item-price" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
+                    <div class="w-1/3">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Est From</label>
+                      <input type="number" id="edit-item-price-from" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
                     </div>
+                    <div class="w-1/3">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Est To</label>
+                      <input type="number" id="edit-item-price-to" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Reference Image</label>
+                    <input type="file" id="edit-item-image" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white">
                   </div>
                   <div>
                      <label class="block text-sm font-medium text-slate-700 mb-1">Assign To</label>
@@ -267,10 +283,10 @@
         sections: { auth: document.getElementById("auth-section"), dash: document.getElementById("dashboard-section"), details: document.getElementById("project-details-section") },
         auth: { email: document.getElementById("email"), pass: document.getElementById("password"), btn: document.getElementById("login-btn"), err: document.getElementById("auth-error"), out: document.getElementById("logout-btn") },
         proj: { name: document.getElementById("project-name"), btn: document.getElementById("create-project-btn"), msg: document.getElementById("action-msg"), grid: document.getElementById("projects-grid"), empty: document.getElementById("empty-projects-msg"), refresh: document.getElementById("refresh-projects-btn") },
-        item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), price: document.getElementById("new-item-price"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
+        item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
         users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
         tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived") },
-        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), price: document.getElementById("edit-item-price"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn") },
+        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn") },
         userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
       };
 
@@ -703,12 +719,14 @@
          });
       }
 
-      window.openEditItemModal = function(projectName, itemName, qty, price, assignedTo) {
+      window.openEditItemModal = function(projectName, itemName, qty, priceFrom, priceTo, assignedTo) {
           editingItemContext = { projectName, oldItemName: itemName };
           ui.editModal.name.value = itemName;
           ui.editModal.qty.value = qty;
-          ui.editModal.price.value = price;
+          ui.editModal.priceFrom.value = priceFrom || "";
+          ui.editModal.priceTo.value = priceTo || "";
           ui.editModal.assign.value = assignedTo || "";
+          ui.editModal.image.value = ""; // Reset file input
           
           ui.editModal.el.classList.remove("hidden");
       }
@@ -722,12 +740,13 @@
           editingItemContext = null;
       });
 
-      ui.editModal.btnSave.addEventListener("click", () => {
+      ui.editModal.btnSave.addEventListener("click", async () => {
           if (!editingItemContext) return;
           
           const newName = ui.editModal.name.value.trim();
           const newQty = parseInt(ui.editModal.qty.value) || 1;
-          const newPrice = ui.editModal.price.value.trim();
+          const newPriceFrom = ui.editModal.priceFrom.value.trim();
+          const newPriceTo = ui.editModal.priceTo.value.trim();
           const newAssign = ui.editModal.assign.value;
 
           if (!newName) {
@@ -738,16 +757,39 @@
           ui.editModal.btnSave.disabled = true;
           ui.editModal.btnSave.textContent = "Saving...";
 
-          submitEdit(editingItemContext.projectName, editingItemContext.oldItemName, newName, newQty, newPrice, newAssign);
+          let base64Image = "";
+          if (ui.editModal.image.files.length > 0) {
+              base64Image = await compressImage(ui.editModal.image.files[0]);
+          }
+
+          submitEdit(editingItemContext.projectName, editingItemContext.oldItemName, newName, newQty, newPriceFrom, newPriceTo, newAssign, base64Image);
       });
 
-      async function submitEdit(projectName, oldItemName, newItemName, newQty, newPrice, assignedTo) {
+      async function submitEdit(projectName, oldItemName, newItemName, newQty, newPriceFrom, newPriceTo, assignedTo, base64Image) {
          try {
            ui.item.existing.innerHTML = '<p class="text-slate-500 text-sm italic">Saving changes to server...</p>';
+           
+           const estPriceRange = (newPriceFrom && newPriceTo) ? `$${newPriceFrom}-$${newPriceTo}` : '';
+           
+           const payload = { 
+               projectName, 
+               oldItemName, 
+               newItemName, 
+               qty: newQty, 
+               estPriceFrom: newPriceFrom,
+               estPriceTo: newPriceTo,
+               estPriceRange: estPriceRange, 
+               assignedTo 
+           };
+
+           if (base64Image) {
+               payload.referenceImageBase64 = base64Image.split(',')[1]; // Remove data:image... header
+           }
+
            const res = await fetch("/api/project/edit-item", {
              method: "POST",
              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-             body: JSON.stringify({ projectName, oldItemName, newItemName, qty: newQty, estPriceRange: newPrice, assignedTo })
+             body: JSON.stringify(payload)
            });
            if (res.ok) {
              ui.editModal.el.classList.add("hidden");
@@ -769,20 +811,89 @@
          pendingItems = [];
       });
 
+      // --- IMAGE COMPRESSION HELPER ---
+      function compressImage(file) {
+          return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = event => {
+                  const img = new Image();
+                  img.src = event.target.result;
+                  img.onload = () => {
+                      const canvas = document.createElement('canvas');
+                      let width = img.width;
+                      let height = img.height;
+                      const MAX_WIDTH = 800;
+                      const MAX_HEIGHT = 800;
+
+                      if (width > height) {
+                          if (width > MAX_WIDTH) {
+                              height *= MAX_WIDTH / width;
+                              width = MAX_WIDTH;
+                          }
+                      } else {
+                          if (height > MAX_HEIGHT) {
+                              width *= MAX_HEIGHT / height;
+                              height = MAX_HEIGHT;
+                          }
+                      }
+
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext('2d');
+                      ctx.drawImage(img, 0, 0, width, height);
+                      
+                      // Compress as JPEG at 70% quality
+                      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                      resolve(dataUrl);
+                  };
+                  img.onerror = error => reject(error);
+              };
+              reader.onerror = error => reject(error);
+          });
+      }
+
       // --- QUEUE & BATCH LOGIC ---
-      ui.item.btnQueue.addEventListener("click", () => {
+      ui.item.btnQueue.addEventListener("click", async () => {
          const itemName = ui.item.name.value.trim();
          const qty = parseInt(ui.item.qty.value) || 1;
-         const estPrice = ui.item.price.value.trim();
+         const priceFrom = ui.item.priceFrom.value.trim();
+         const priceTo = ui.item.priceTo.value.trim();
          const assignedTo = ui.item.assign.value;
          
          if (!itemName) return;
 
-         pendingItems.push({ itemName, qty, estPriceRange: estPrice, assignedTo, id: Date.now() });
+         ui.item.btnQueue.disabled = true;
+         ui.item.btnQueue.textContent = "Wait...";
+
+         let base64Image = "";
+         if (ui.item.image.files.length > 0) {
+             try {
+                 base64Image = await compressImage(ui.item.image.files[0]);
+             } catch (e) {
+                 alert("Could not compress image.");
+             }
+         }
+
+         const estPriceString = (priceFrom && priceTo) ? `$${priceFrom}-$${priceTo}` : '';
+
+         pendingItems.push({ 
+             itemName, 
+             qty, 
+             estPriceFrom: priceFrom,
+             estPriceTo: priceTo,
+             estPriceRange: estPriceString, 
+             assignedTo, 
+             referenceImageBase64: base64Image ? base64Image.split(',')[1] : "", // Strip data:image prefix
+             id: Date.now() 
+         });
          
-         ui.item.name.value = ""; ui.item.qty.value = "1"; ui.item.price.value = ""; ui.item.assign.value = "";
+         ui.item.name.value = ""; ui.item.qty.value = "1"; ui.item.priceFrom.value = ""; ui.item.priceTo.value = ""; ui.item.assign.value = ""; ui.item.image.value = "";
          ui.item.name.focus();
          renderQueue();
+         
+         ui.item.btnQueue.disabled = false;
+         ui.item.btnQueue.textContent = "Queue Item";
       });
 
       function renderQueue() {
