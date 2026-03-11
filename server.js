@@ -21,7 +21,7 @@ const db = admin.firestore();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Serve Static Web Dashboard (Admin Panel at root /)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -126,19 +126,21 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
       const projectRef = db.collection('projects').doc(projectName);
       await projectRef.set({
         name: projectName,
+        isActive: false,
+        isArchived: false,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
       if (initialItems && initialItems.length > 0) {
         const batch = db.batch();
         initialItems.forEach(item => {
-          const itemRef = projectRef.collection('items').doc();
+          const itemRef = projectRef.collection('items').doc(item.itemName.replace(/\//g, '-'));
           batch.set(itemRef, {
             name: item.itemName,
             qty: parseInt(item.qty) || 1,
             estPriceRange: item.estPriceRange || '',
             status: 'Searching',
-            assignedTo: item.assignedTo || '',
+            assignedTo: '',
             piecePrice: 0,
             totalPrice: 0
           });
@@ -322,6 +324,77 @@ app.get('/api/sync', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error syncing projects:', error);
     res.status(500).json({ error: 'Failed to sync projects from backend' });
+  }
+});
+
+// Endpoint: Toggle project active status
+app.post('/api/project/toggle-active', verifyToken, async (req, res) => {
+  try {
+    const { projectName, isActive } = req.body;
+    if (!projectName) return res.status(400).send('Missing projectName');
+    await db.collection('projects').doc(projectName).set({ isActive: !!isActive }, { merge: true });
+    res.status(200).json({ status: 'success', isActive: !!isActive });
+  } catch (error) {
+    console.error('Error toggling project active:', error);
+    res.status(500).json({ error: 'Failed to toggle project active status' });
+  }
+});
+
+// Endpoint: Archive a project
+app.post('/api/project/archive', verifyToken, async (req, res) => {
+  try {
+    const { projectName } = req.body;
+    if (!projectName) return res.status(400).send('Missing projectName');
+    await db.collection('projects').doc(projectName).set({ isActive: false, isArchived: true }, { merge: true });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error archiving project:', error);
+    res.status(500).json({ error: 'Failed to archive project' });
+  }
+});
+
+// Endpoint: Unarchive a project (keeps inactive)
+app.post('/api/project/unarchive', verifyToken, async (req, res) => {
+  try {
+    const { projectName } = req.body;
+    if (!projectName) return res.status(400).send('Missing projectName');
+    await db.collection('projects').doc(projectName).set({ isArchived: false, isActive: false }, { merge: true });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error unarchiving project:', error);
+    res.status(500).json({ error: 'Failed to unarchive project' });
+  }
+});
+
+// Endpoint: Delete a project
+app.delete('/api/project/delete', verifyToken, async (req, res) => {
+  try {
+    const adminEmail = req.user.email;
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com'];
+    if (!authorizedAdmins.includes(adminEmail)) return res.status(403).send('Forbidden');
+
+    const { projectName } = req.body;
+    if (!projectName) return res.status(400).send('Missing projectName');
+
+    // Delete all items in the project subcollection first
+    const itemsRef = db.collection('projects').doc(projectName).collection('items');
+    const snapshot = await itemsRef.get();
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    // Then delete the project doc
+    await db.collection('projects').doc(projectName).delete();
+
+    // Also notify GAS to delete the sheet tab (best-effort)
+    try {
+      await axios.post(APPS_SCRIPT_URL, { action: 'deleteProject', projectName, adminEmail });
+    } catch (_) {}
+
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).json({ error: 'Failed to delete project' });
   }
 });
 
