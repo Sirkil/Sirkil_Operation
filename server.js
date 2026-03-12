@@ -91,7 +91,7 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
     // Extract the admin's email directly from the verified Firebase Auth token
     const adminEmail = req.user.email; 
 
-    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com'];
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com' , "farah.ashraf@sirkil.com"];
 
     // Optional: Add a strict role check to ensure only admins can trigger this.
     // You can hardcode your admin email or check a database role.
@@ -373,7 +373,7 @@ app.post('/api/project/unarchive', verifyToken, async (req, res) => {
 app.delete('/api/project/delete', verifyToken, async (req, res) => {
   try {
     const adminEmail = req.user.email;
-    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com'];
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com', "farah.ashraf@sirkil.com"];
     if (!authorizedAdmins.includes(adminEmail)) return res.status(403).send('Forbidden');
 
     const { projectName } = req.body;
