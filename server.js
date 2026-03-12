@@ -438,10 +438,21 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
 
     const response = await axios.post(APPS_SCRIPT_URL, payload);
     
-    // Deduct from Firestore user balance
+    // Add Cash Expense item to the project
     if (!req.body.skipFirestore && payload.amount) {
-      const userRef = db.collection('users').doc(userEmail);
-      await userRef.set({ balance: admin.firestore.FieldValue.increment(-parseFloat(payload.amount)) }, { merge: true });
+      const itemRef = db.collection('projects').doc(payload.projectName).collection('items').doc(`EXPENSE-${Date.now()}`);
+      await itemRef.set({
+          name: `EXPENSE: ${payload.expenseName}`,
+          qty: 1,
+          estPriceRange: "Cash Expense",
+          estPriceFrom: 0,
+          estPriceTo: 0,
+          referenceImageBase64: '',
+          status: 'Bought',
+          assignedTo: userEmail,
+          piecePrice: parseFloat(payload.amount),
+          totalPrice: parseFloat(payload.amount)
+      });
     }
     
     res.status(200).json(response.data);
