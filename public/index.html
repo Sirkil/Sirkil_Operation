@@ -330,7 +330,7 @@
       // --- AUTH FLOW ---
       onAuthStateChanged(auth, async (user) => {
         if (user) {
-          const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com" , "omar@sirkil.com" , "amr@sirkil.com"];
+          const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com" , "omar@sirkil.com" , "amr@sirkil.com" , "farah.ashraf@sirkil.com"];
           
           if (!authorizedAdmins.includes(user.email)) {
              ui.sections.dash.classList.add("hidden");
