@@ -7,11 +7,9 @@ const path = require('path');
 // Initialize Firebase Admin for Token Verification
 let credential;
 if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-  // Parse the JSON string from Render Environment Variables
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
   credential = admin.credential.cert(serviceAccount);
 } else {
-  // Fallback to local file for development
   const serviceAccount = require('./serviceAccountKey.json');
   credential = admin.credential.cert(serviceAccount);
 }
@@ -30,7 +28,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/app', express.static(path.join(__dirname, 'public/app')));
 
 // Replace with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOXh5eTWUSDlxBNLQ-QHAeO41AH79z_t9PZIZwwz40QjmfcyBXDir9ZZbi3dwBzzU9cA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyxaekFT3SBMR74AlidIC7SlKxOEfkTo0avE1MBWb7dvY1rhQ1c4pwq3VJnLWovqiw9A/exec';
 
 // Middleware to verify Firebase ID Token from the Flutter App
 const verifyToken = async (req, res, next) => {
@@ -39,25 +37,36 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    req.user = decodedToken; // Contains user email and uid
+    req.user = decodedToken;
     next();
   } catch (error) {
     res.status(401).send('Unauthorized: Invalid token');
   }
 };
 
-// Endpoint: Submit a new purchase/update
+// Helper for Firestore item updates
+async function updateFirestoreItem(projectName, oldItemName, updates) {
+  try {
+    const itemsRef = db.collection('projects').doc(projectName).collection('items');
+    const snapshot = await itemsRef.where('name', '==', oldItemName).get();
+    if (snapshot.empty) return;
+
+    const batch = db.batch();
+    snapshot.forEach(doc => {
+      batch.update(doc.ref, updates);
+    });
+    await batch.commit();
+  } catch(e) { console.error('Firestore Update Error:', e); }
+}
+
+// Endpoint: Submit a new purchase/update (legacy)
 app.post('/api/purchase', verifyToken, async (req, res) => {
   try {
     const { itemName, qty, piecePrice, status, invoiceImageBase64 } = req.body;
     const userEmail = req.user.email;
     const totalPrice = qty * piecePrice;
-
-    // The Google Apps Script is expected to handle the base64 string and upload it to Google Drive
-    // If invoiceImageBase64 is passed from the frontend, it will be forwarded as-is.
     const invoiceUrl = invoiceImageBase64 || "";
 
-    // Prepare payload for Google Apps Script
     const payload = {
       action: "logPurchase",
       userEmail: userEmail,
@@ -69,32 +78,25 @@ app.post('/api/purchase', verifyToken, async (req, res) => {
       invoiceUrl: invoiceUrl
     };
 
-    // Send data to Google Sheets via Apps Script
     const response = await axios.post(APPS_SCRIPT_URL, payload);
-
-    res.status(200).json({ 
-        message: 'Purchase logged successfully', 
-        sheetResponse: response.data 
-    });
-
+    res.status(200).json({ message: 'Purchase logged successfully', sheetResponse: response.data });
   } catch (error) {
     console.error(error);
     res.status(500).send('Internal Server Error');
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Endpoint: Create a new project (Admin Only)
+// Change 3: preserveActive=true means we won't overwrite isActive if already true
+// ─────────────────────────────────────────────────────────────────────────────
 app.post('/api/project/create', verifyToken, async (req, res) => {
   try {
-    // Extract data sent from the Flutter Admin Dashboard
-    const { projectName, initialItems } = req.body;
-    
-    // Extract the admin's email directly from the verified Firebase Auth token
-    const adminEmail = req.user.email; 
+    const { projectName, initialItems, preserveActive } = req.body;
+    const adminEmail = req.user.email;
 
-    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com' , "farah.ashraf@sirkil.com"];
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com', "farah.ashraf@sirkil.com"];
 
-    // Optional: Add a strict role check to ensure only admins can trigger this.
-    // You can hardcode your admin email or check a database role.
     if (!authorizedAdmins.includes(adminEmail)) {
        return res.status(403).send('Forbidden: Admin access required');
     }
@@ -103,38 +105,43 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
       return res.status(400).send('Bad Request: projectName is required');
     }
 
-    // Prepare the exact payload expected by the Google Apps Script doPost function
     const payload = {
       action: "createProject",
       projectName: projectName,
       adminEmail: adminEmail,
-      // initialItems is an optional array of objects: [{itemName: "Laptop", qty: 2, assignedTo: "..."}]
-      initialItems: initialItems || [] 
+      initialItems: initialItems || []
     };
 
-    // Forward the request to your Google Apps Script Web App
     const response = await axios.post(APPS_SCRIPT_URL, payload);
-
-    // Return the success confirmation back to the Flutter app
-    res.status(200).json({ 
-        message: `Project ${projectName} initiated successfully`, 
-        sheetResponse: response.data 
+    res.status(200).json({
+        message: `Project ${projectName} initiated successfully`,
+        sheetResponse: response.data
     });
 
     // Dual-write to Firestore
+    // Change 3: Check if project already exists and is active — don't override isActive
     try {
       const projectRef = db.collection('projects').doc(projectName);
+      const existingDoc = await projectRef.get();
+      
+      let isActiveValue = true; // New projects start as active
+      if (existingDoc.exists && preserveActive) {
+        // Preserve existing active state
+        isActiveValue = existingDoc.data().isActive ?? true;
+      }
+
       await projectRef.set({
         name: projectName,
-        isActive: false,
+        isActive: isActiveValue,
         isArchived: false,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      }, { merge: true }); // Use merge so we don't wipe existing data
 
       if (initialItems && initialItems.length > 0) {
         const batch = db.batch();
         initialItems.forEach(item => {
-          const itemRef = projectRef.collection('items').doc(item.itemName.replace(/\//g, '-'));
+          const docId = (item.itemName || '').replace(/\//g, '-');
+          const itemRef = projectRef.collection('items').doc(docId);
           batch.set(itemRef, {
             name: item.itemName,
             qty: parseInt(item.qty) || 1,
@@ -143,7 +150,8 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
             estPriceTo: parseFloat(item.estPriceTo) || 0,
             referenceImageBase64: item.referenceImageBase64 || '',
             status: 'Searching',
-            assignedTo: '',
+            // Change 7/extra req: if admin pre-assigns item, set it so user sees in Assigned tab
+            assignedTo: item.assignedTo || '',
             piecePrice: 0,
             totalPrice: 0
           });
@@ -160,30 +168,17 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
   }
 });
 
-// Helper for Firestore
-async function updateFirestoreItem(projectName, oldItemName, updates) {
-  try {
-    const itemsRef = db.collection('projects').doc(projectName).collection('items');
-    const snapshot = await itemsRef.where('name', '==', oldItemName).get();
-    if (snapshot.empty) return; // Item not found
-
-    const batch = db.batch();
-    snapshot.forEach(doc => {
-      batch.update(doc.ref, updates);
-    });
-    await batch.commit();
-  } catch(e) { console.error('Firestore Update Error:', e); }
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
 // Endpoint: Edit an existing item/claim item/update status
+// ─────────────────────────────────────────────────────────────────────────────
 app.post('/api/project/edit-item', verifyToken, async (req, res) => {
   try {
-    const userEmail = req.user.email; 
+    const userEmail = req.user.email;
 
     const payload = {
       ...req.body,
       action: "editItem",
-      adminEmail: userEmail // Track who edited it
+      adminEmail: userEmail
     };
 
     const response = await axios.post(APPS_SCRIPT_URL, payload);
@@ -210,15 +205,22 @@ app.post('/api/project/edit-item', verifyToken, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
 // Endpoint: Log a purchase and final price to the Master Sheet
+// Change 9: imageBase64 is sent as base64 — GAS will upload it to Drive
+// Folder structure enforced in GAS: projectName/itemName/invoice/
+// ─────────────────────────────────────────────────────────────────────────────
 app.post('/api/project/log-purchase', verifyToken, async (req, res) => {
   try {
-    const userEmail = req.user.email; 
+    const userEmail = req.user.email;
 
+    // Send base64 image directly to GAS so it can upload to Drive
     const payload = {
       ...req.body,
       action: "logPurchase",
-      adminEmail: userEmail
+      adminEmail: userEmail,
+      userEmail: userEmail,
+      // imageBase64 forwarded as-is (GAS will handle the Drive upload)
     };
 
     const response = await axios.post(APPS_SCRIPT_URL, payload);
@@ -251,7 +253,7 @@ app.post('/api/project/log-purchase', verifyToken, async (req, res) => {
 app.post('/api/add-money', verifyToken, async (req, res) => {
   try {
     const { amount, purpose, fromWhom, timeOfTransaction } = req.body;
-    const userEmail = req.user.email; // From verified token
+    const userEmail = req.user.email;
 
     const response = await axios.post(APPS_SCRIPT_URL, {
       action: 'addMoney',
@@ -264,7 +266,6 @@ app.post('/api/add-money', verifyToken, async (req, res) => {
 
     res.json(response.data);
 
-    // Dual-write to Firestore
     if (!req.body.skipFirestore) {
       if (amount) {
         const userRef = db.collection('users').doc(userEmail);
@@ -282,16 +283,14 @@ app.get('/api/sync', verifyToken, async (req, res) => {
   try {
     const response = await axios.get(APPS_SCRIPT_URL);
     
-    // Fetch users from Firebase Auth
     const listUsersResult = await admin.auth().listUsers(1000);
     const firebaseUsers = listUsersResult.users.map(userRecord => ({
       uid: userRecord.uid,
       email: userRecord.email,
       name: userRecord.displayName || 'Unknown',
-      role: 'User' // Default role
+      role: 'User'
     }));
 
-    // Data from Google Sheets
     let sheetData = response.data;
     let sheetUsers = [];
     let sheetProjects = [];
@@ -306,8 +305,6 @@ app.get('/api/sync', verifyToken, async (req, res) => {
        }
     }
 
-    // Merge users: Use Firebase Users as the base, and attach balance if present in Google Sheets
-    // The admin dashboard and flutter app expects an array of users with name, email, and balance
     const mergedUsers = firebaseUsers.map(fbUser => {
        const matchedSheetUser = sheetUsers.find(su => su.email === fbUser.email || (su.name && su.name.toLowerCase() === fbUser.name.toLowerCase()));
        return {
@@ -356,7 +353,7 @@ app.post('/api/project/archive', verifyToken, async (req, res) => {
   }
 });
 
-// Endpoint: Unarchive a project (keeps inactive)
+// Endpoint: Unarchive a project
 app.post('/api/project/unarchive', verifyToken, async (req, res) => {
   try {
     const { projectName } = req.body;
@@ -379,17 +376,14 @@ app.delete('/api/project/delete', verifyToken, async (req, res) => {
     const { projectName } = req.body;
     if (!projectName) return res.status(400).send('Missing projectName');
 
-    // Delete all items in the project subcollection first
     const itemsRef = db.collection('projects').doc(projectName).collection('items');
     const snapshot = await itemsRef.get();
     const batch = db.batch();
     snapshot.forEach(doc => batch.delete(doc.ref));
     await batch.commit();
 
-    // Then delete the project doc
     await db.collection('projects').doc(projectName).delete();
 
-    // Also notify GAS to delete the sheet tab (best-effort)
     try {
       await axios.post(APPS_SCRIPT_URL, { action: 'deleteProject', projectName, adminEmail });
     } catch (_) {}
@@ -398,6 +392,60 @@ app.delete('/api/project/delete', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error deleting project:', error);
     res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Endpoint: Rename a project (Change 10)
+// ─────────────────────────────────────────────────────────────────────────────
+app.post('/api/project/rename', verifyToken, async (req, res) => {
+  try {
+    const adminEmail = req.user.email;
+    const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com', "farah.ashraf@sirkil.com"];
+    if (!authorizedAdmins.includes(adminEmail)) return res.status(403).send('Forbidden');
+
+    const { oldName, newName } = req.body;
+    if (!oldName || !newName) return res.status(400).send('Missing oldName or newName');
+
+    const oldRef = db.collection('projects').doc(oldName);
+    const newRef = db.collection('projects').doc(newName);
+
+    // 1. Copy project doc
+    const oldDoc = await oldRef.get();
+    if (!oldDoc.exists) return res.status(404).send('Project not found');
+    await newRef.set({ ...oldDoc.data(), name: newName }, { merge: false });
+
+    // 2. Copy all items
+    const itemsSnapshot = await oldRef.collection('items').get();
+    if (!itemsSnapshot.empty) {
+      const batch = db.batch();
+      itemsSnapshot.forEach(doc => {
+        const newItemRef = newRef.collection('items').doc(doc.id);
+        batch.set(newItemRef, { ...doc.data(), projectName: newName });
+      });
+      await batch.commit();
+    }
+
+    // 3. Delete old project + items
+    const delBatch = db.batch();
+    itemsSnapshot.forEach(doc => delBatch.delete(doc.ref));
+    delBatch.delete(oldRef);
+    await delBatch.commit();
+
+    // 4. Notify GAS to rename the sheet tab
+    try {
+      await axios.post(APPS_SCRIPT_URL, {
+        action: 'renameProject',
+        oldName,
+        newName,
+        adminEmail
+      });
+    } catch (_) {}
+
+    res.status(200).json({ status: 'success', message: `Project renamed from "${oldName}" to "${newName}"` });
+  } catch (error) {
+    console.error('Error renaming project:', error);
+    res.status(500).json({ error: 'Failed to rename project' });
   }
 });
 
@@ -413,7 +461,6 @@ app.post('/api/project/log-deposit', verifyToken, async (req, res) => {
 
     const response = await axios.post(APPS_SCRIPT_URL, payload);
     
-    // Deduct from Firestore user balance
     if (!req.body.skipFirestore && payload.depositAmount) {
       const userRef = db.collection('users').doc(userEmail);
       await userRef.set({ balance: admin.firestore.FieldValue.increment(-parseFloat(payload.depositAmount)) }, { merge: true });
@@ -438,7 +485,6 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
 
     const response = await axios.post(APPS_SCRIPT_URL, payload);
     
-    // Add Cash Expense item to the project
     if (!req.body.skipFirestore && payload.amount) {
       const itemRef = db.collection('projects').doc(payload.projectName).collection('items').doc(`EXPENSE-${Date.now()}`);
       await itemRef.set({
@@ -459,6 +505,39 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error logging expense:', error);
     res.status(500).send('Internal Server Error: Failed to log expense');
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Endpoint: Add a vendor (Change 2c)
+// ─────────────────────────────────────────────────────────────────────────────
+app.post('/api/vendor/add', verifyToken, async (req, res) => {
+  try {
+    const { name, place, phone } = req.body;
+    if (!name) return res.status(400).send('Vendor name is required');
+
+    // Save to Firestore
+    await db.collection('vendors').add({
+      name,
+      place: place || '',
+      phone: phone || '',
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Notify GAS to add to "vendor list" sheet
+    try {
+      await axios.post(APPS_SCRIPT_URL, {
+        action: 'addVendor',
+        vendorName: name,
+        vendorPlace: place || '',
+        vendorPhone: phone || ''
+      });
+    } catch (_) {}
+
+    res.status(200).json({ status: 'success', message: 'Vendor added' });
+  } catch (error) {
+    console.error('Error adding vendor:', error);
+    res.status(500).json({ error: 'Failed to add vendor' });
   }
 });
 
