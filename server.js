@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/app', express.static(path.join(__dirname, 'public/app')));
 
 // Replace with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMo5lnJkdTmcS-GLzkhRyS87BzIgQwXSQm0mzrv_DxgqF0AKdr2iVqrz6mkJUhB3No/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPo9IgibK0_JmkzXv-vo_tQaRASxEOv10WKj2irk-OKsPaHvhTEp2ksx1xqDtusOas3A/exec';
 
 // Middleware to verify Firebase ID Token from the Flutter App
 const verifyToken = async (req, res, next) => {
