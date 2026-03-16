@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
 const axios = require('axios');
 const cors = require('cors');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 // Initialize Firebase Admin for Token Verification
 let credential;
@@ -572,6 +574,38 @@ app.get('/api/proxy/get', verifyToken, async (req, res) => {
 // Fallback route for Flutter Web App (Single Page Application routing support)
 app.get(/^\/app.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public/app', 'index.html'));
+});
+
+// Email Transporter Configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.SMTP_EMAIL,
+    pass: process.env.SMTP_PASSWORD
+  }
+});
+
+// Endpoint to send an email
+app.post('/api/send-email', async (req, res) => {
+  const { to, subject, htmlBody } = req.body;
+
+  if (!to || !subject || !htmlBody) {
+    return res.status(400).json({ error: 'Missing to, subject, or htmlBody' });
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"Sirkil Operation" <${process.env.SMTP_EMAIL}>`,
+      to,
+      subject,
+      html: htmlBody
+    });
+    console.log('Email sent:', info.messageId);
+    res.status(200).json({ status: 'success', messageId: info.messageId });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send email', details: error.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
