@@ -101155,7 +101155,7 @@ while(true)switch(s){case 0:return A.A(null,r)}})
 return A.B($async$$0,r)},
 $S:7}
 A.pj.prototype={
-aj(){var s=A.b(["collecting/delivered","Deposit","Bought","in office"],t.s),r=$.aB()
+aj(){var s=A.b(["collecting/delivered","Deposit","Bought","On Stock"],t.s),r=$.aB()
 return new A.Ke(s,new A.e0(B.aw,r),new A.e0(B.aw,r),new A.e0(B.aw,r),new A.e0(B.aw,r),new A.e0(B.aw,r),new A.e0(B.aw,r),new A.e0(B.aw,r),new A.ags(),null,null)}}
 A.Ke.prototype={
 gHg(){var s,r=A.fs(this.z.a.a)
@@ -101167,6 +101167,7 @@ o.aP()
 o.ax=A.aTu(2,o)
 s=o.a.d.e
 if(s==="collecting"||s==="delivered")o.w=n
+else if(s==="in office"||s==="on stock")o.w="On Stock"
 else if(B.b.q(o.x,s))o.w=s
 else o.w=n
 r=o.ch
