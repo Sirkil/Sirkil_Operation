@@ -261,7 +261,32 @@
       </div>
     </div>
 
+    <!-- Rename Project Modal (Issue 3) -->
+    <div id="rename-modal" class="hidden fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('rename-modal').classList.add('hidden')"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm border border-slate-100 z-10">
+          <div class="px-6 py-5 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Rename Project</h3>
+            <p class="text-sm text-slate-500 mt-1">This will update the name in the app and all related sheets.</p>
+          </div>
+          <div class="px-6 py-4 space-y-3">
+            <input type="hidden" id="rename-old-name" />
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">New Project Name</label>
+              <input type="text" id="rename-new-name" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Enter new project name" />
+            </div>
+          </div>
+          <div class="px-6 py-4 bg-slate-50 rounded-b-xl flex gap-3 justify-end border-t border-slate-100">
+            <button onclick="document.getElementById('rename-modal').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Cancel</button>
+            <button id="rename-confirm-btn" onclick="renameProject()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition">Rename</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Notification/Alert Modal -->
+
     <div id="alert-modal" class="hidden fixed inset-0 z-[120] overflow-y-auto" aria-labelledby="alert-modal-title" role="dialog" aria-modal="true">
       <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
         <div class="fixed inset-0 bg-slate-900 bg-opacity-50 transition-opacity backdrop-blur-sm" aria-hidden="true" id="alert-modal-bg"></div>
@@ -469,6 +494,29 @@
           await window.apiCall('/api/project/unarchive', { projectName });
       }
 
+      window.openRenameModal = function(projectName, e) {
+          e.stopPropagation();
+          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
+          document.getElementById('rename-old-name').value = projectName;
+          document.getElementById('rename-new-name').value = projectName;
+          document.getElementById('rename-modal').classList.remove('hidden');
+      };
+
+      window.renameProject = async function() {
+          const oldName = document.getElementById('rename-old-name').value;
+          const newName = document.getElementById('rename-new-name').value.trim();
+          if (!newName || newName === oldName) { document.getElementById('rename-modal').classList.add('hidden'); return; }
+          const btn = document.getElementById('rename-confirm-btn');
+          btn.disabled = true; btn.textContent = 'Renaming...';
+          const ok = await window.apiCall('/api/project/rename', { oldName, newName, adminEmail: currentUserEmail });
+          btn.disabled = false; btn.textContent = 'Rename';
+          document.getElementById('rename-modal').classList.add('hidden');
+          if (ok) {
+             if (activeProject === oldName) { activeProject = newName; ui.item.title.textContent = newName; }
+             customAlert(`Project renamed from "${oldName}" to "${newName}" successfully!`, 'Renamed');
+          }
+      };
+
       window.deleteProject = async function(projectName, e) {
           e.stopPropagation();
           document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
@@ -611,6 +659,7 @@
                 menuHTML = `<button onclick="unarchiveProject('${pName}', event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Unarchive</button>`;
             } else {
                 menuHTML = `
+                   <button onclick="openRenameModal('${pName}', event)" class="block px-4 py-2 text-sm text-brand-600 w-full text-left hover:bg-brand-50 border-b border-slate-100 font-medium">Rename</button>
                    <button onclick="toggleActive('${pName}', ${!p.isActive}, event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Set ${p.isActive ? 'Inactive' : 'Active'}</button>
                    <button onclick="archiveProject('${pName}', event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Archive</button>
                 `;
@@ -666,7 +715,7 @@
             card.innerHTML = `
               <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xl mb-3">${user.name ? user.name.charAt(0).toUpperCase() : '?'}</div>
               <h3 class="font-bold text-slate-800 text-md truncate w-full">${user.name || 'Unknown'}</h3>
-              <p class="text-sm text-brand-600 font-medium">Balance: $${user.balance || 0}</p>
+              <p class="text-sm text-brand-600 font-medium">Balance: EGP ${user.balance || 0}</p>
             `;
             card.addEventListener("click", () => openUserModal(user));
             ui.users.grid.appendChild(card);
@@ -682,7 +731,7 @@
 
       function openUserModal(user) {
          ui.userModal.title.textContent = user.name || 'Unknown';
-         ui.userModal.balance.textContent = `$${user.balance || 0}`;
+         ui.userModal.balance.textContent = `EGP ${user.balance || 0}`;
          ui.userModal.items.innerHTML = "";
 
          const assignedItems = [];

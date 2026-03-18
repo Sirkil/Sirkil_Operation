@@ -32,6 +32,9 @@ app.use('/app', express.static(path.join(__dirname, 'public/app')));
 // Replace with your deployed Google Apps Script Web App URL
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyxaekFT3SBMR74AlidIC7SlKxOEfkTo0avE1MBWb7dvY1rhQ1c4pwq3VJnLWovqiw9A/exec';
 
+// All authorized admin accounts — used for access control and notifications
+const ADMIN_EMAILS = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com', 'farah.ashraf@sirkil.com'];
+
 // Middleware to verify Firebase ID Token from the Flutter App
 const verifyToken = async (req, res, next) => {
   const idToken = req.headers.authorization?.split('Bearer ')[1];
@@ -242,6 +245,23 @@ app.post('/api/project/log-purchase', verifyToken, async (req, res) => {
       if (totalPrice) {
         const userRef = db.collection('users').doc(userEmail);
         await userRef.set({ balance: admin.firestore.FieldValue.increment(-parseFloat(totalPrice)) }, { merge: true });
+      }
+    }
+
+    // Issue #6: Also post to Stock Sheet so the item is added to inventory when bought
+    const STOCK_SCRIPT_URL = process.env.STOCK_SCRIPT_URL;
+    if (STOCK_SCRIPT_URL && req.body.itemName && !req.body.skipStockSync) {
+      try {
+        const stockCategory = req.body.stockCategory || 'General';
+        const stockPayload = {
+          type: 'ADD',
+          cart: [{ name: req.body.itemName, qty: parseInt(req.body.qty) || 1, category: stockCategory }],
+          user: { name: userEmail, email: userEmail },
+          purpose: `Purchased for project: ${req.body.projectName || 'Unknown'}`
+        };
+        await axios.post(STOCK_SCRIPT_URL, stockPayload);
+      } catch (stockErr) {
+        console.error('Stock sheet sync error (non-fatal):', stockErr.message);
       }
     }
 
@@ -488,6 +508,15 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
     const response = await axios.post(APPS_SCRIPT_URL, payload);
     
     if (!req.body.skipFirestore && payload.amount) {
+      // Look up the user's display name from Firestore users collection
+      let displayName = userEmail; // fallback to email
+      try {
+        const userDoc = await db.collection('users').doc(userEmail).get();
+        if (userDoc.exists && userDoc.data().name) {
+          displayName = userDoc.data().name;
+        }
+      } catch (_) {}
+
       const itemRef = db.collection('projects').doc(payload.projectName).collection('items').doc(`EXPENSE-${Date.now()}`);
       await itemRef.set({
           name: `EXPENSE: ${payload.expenseName}`,
@@ -497,7 +526,7 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
           estPriceTo: 0,
           referenceImageBase64: '',
           status: 'Bought',
-          assignedTo: userEmail,
+          assignedTo: displayName, // Store display name, not email
           piecePrice: parseFloat(payload.amount),
           totalPrice: parseFloat(payload.amount)
       });
@@ -515,14 +544,15 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 app.post('/api/vendor/add', verifyToken, async (req, res) => {
   try {
-    const { name, place, phone } = req.body;
+    const { name, place, phone, projectName } = req.body;
     if (!name) return res.status(400).send('Vendor name is required');
 
-    // Save to Firestore
+    // Save to Firestore with projectName
     await db.collection('vendors').add({
       name,
       place: place || '',
       phone: phone || '',
+      projectName: projectName || '',
       createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
@@ -532,7 +562,8 @@ app.post('/api/vendor/add', verifyToken, async (req, res) => {
         action: 'addVendor',
         vendorName: name,
         vendorPlace: place || '',
-        vendorPhone: phone || ''
+        vendorPhone: phone || '',
+        projectName: projectName || ''
       });
     } catch (_) {}
 
