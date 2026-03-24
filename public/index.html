@@ -90,17 +90,28 @@
         <!-- Right Column: Projects & Items -->
         <div class="lg:col-span-3">
           <div class="flex flex-col sm:flex-row justify-between items-start mb-6 border-b border-slate-200 pb-2">
-             <div class="flex gap-6 w-full sm:w-auto overflow-x-auto">
-                <button id="tab-active" class="text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap">Projects</button>
-                <button id="tab-archived" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap">Archived</button>
+             <div class="flex gap-6 w-full sm:w-auto overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <button id="tab-active" class="text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Projects</button>
+                <button id="tab-archived" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Archived</button>
+                <button id="tab-alerts" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap flex items-center gap-2 border-b border-transparent">Alerts <span id="alerts-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span></button>
+                <button id="tab-users" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Users</button>
              </div>
              <button id="refresh-projects-btn" class="text-sm text-brand-600 font-medium hover:underline shrink-0 mt-2 sm:mt-0">Refresh List</button>
           </div>
 
           <!-- Project Cards Grid -->
-          <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-            <!-- Project Cards dynamically injected here -->
+          <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <p id="empty-projects-msg" class="text-slate-500 col-span-full">No projects currently tracked locally. Create one to begin.</p>
+          </div>
+
+          <!-- Users Grid (Hidden initially) -->
+          <div id="users-grid" class="hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <p id="empty-users-msg" class="text-slate-500 col-span-full">Loading users...</p>
+          </div>
+
+          <!-- Alerts Grid (Hidden initially) -->
+          <div id="alerts-grid" class="hidden grid-cols-1 gap-4 mb-8">
+            <p id="empty-alerts-msg" class="text-slate-500 col-span-full">Loading alerts...</p>
           </div>
 
           <!-- Active Project Items (Hidden by default) -->
@@ -109,6 +120,10 @@
                <div>
                   <h3 class="text-xl font-bold text-slate-900" id="detail-project-title">Project Name</h3>
                   <p class="text-sm text-slate-500">Queue items below to add in batch.</p>
+               </div>
+               <div class="hidden sm:block text-right mr-4">
+                  <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Expenses</p>
+                  <p class="text-lg font-bold text-brand-600" id="detail-project-expenses">EGP 0</p>
                </div>
                <button id="close-details-btn" class="text-slate-400 hover:text-red-500 bg-white shadow-sm border border-slate-200 rounded-full p-2">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -128,11 +143,11 @@
                 </div>
                 <div class="w-full">
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est From</label>
-                  <input type="number" id="new-item-price-from" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="$10">
+                  <input type="number" id="new-item-price-from" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="EGP 10">
                 </div>
                 <div class="w-full">
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est To</label>
-                  <input type="number" id="new-item-price-to" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="$20">
+                  <input type="number" id="new-item-price-to" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="EGP 20">
                 </div>
                 <div class="w-full xl:col-span-2">
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ref Image</label>
@@ -172,14 +187,7 @@
             </div>
           </div>
 
-          <!-- Active Users Section -->
-          <div class="mt-6 flex flex-col justify-between items-start mb-6">
-             <h2 class="text-2xl font-bold text-slate-900">Active Users</h2>
-          </div>
-          <!-- User Cards Grid -->
-          <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-            <p id="empty-users-msg" class="text-slate-500 col-span-full">Loading users...</p>
-          </div>
+          
 
         </div>
       </div>
@@ -245,13 +253,36 @@
           <div class="bg-slate-50 border-b border-slate-200 px-4 py-4 sm:px-6 flex justify-between items-center">
              <div>
                 <h3 class="text-xl font-bold text-slate-900" id="user-modal-title">User Name</h3>
-                <p class="text-sm font-medium text-brand-600 mt-1">Balance: <span id="user-modal-balance">$0</span></p>
+                <p class="text-sm font-medium text-brand-600 mt-1">Balance: <span id="user-modal-balance">EGP 0</span></p>
              </div>
              <button id="close-user-modal-btn" class="text-slate-400 hover:text-slate-600 bg-white border border-slate-200 shadow-sm rounded-full p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
              </button>
           </div>
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+             <div class="mb-4 space-y-3 border-b border-slate-100 pb-4">
+                <h4 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Management Settings</h4>
+                <div class="flex gap-4">
+                  <div class="w-1/2">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Role</label>
+                    <select id="user-edit-role" class="w-full p-2 border border-slate-300 rounded outline-none text-sm bg-slate-50">
+                       <option value="User">User</option>
+                       <option value="Admin">Admin</option>
+                    </select>
+                  </div>
+                  <div class="w-1/2">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                    <button id="user-edit-status-btn" class="w-full p-2 border border-slate-300 rounded outline-none text-sm bg-slate-50 text-slate-700 font-medium">Active</button>
+                  </div>
+                </div>
+                <div>
+                   <label class="block text-xs font-semibold text-slate-500 mb-1">Apps Script URL</label>
+                   <input type="text" id="user-edit-script" class="w-full p-2 border border-slate-300 rounded outline-none text-sm" placeholder="https://script.google.com/macros/..." />
+                </div>
+                <button id="user-save-btn" class="w-full bg-slate-900 text-white p-2 rounded text-sm font-medium hover:bg-slate-800 transition">Save User Settings</button>
+                <input type="hidden" id="user-edit-email" />
+             </div>
+
              <h4 class="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wider">Assigned Items</h4>
              <div id="user-assigned-items" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
                  <p class="text-slate-500 text-sm italic">Loading items...</p>
@@ -337,7 +368,7 @@
         proj: { name: document.getElementById("project-name"), btn: document.getElementById("create-project-btn"), msg: document.getElementById("action-msg"), grid: document.getElementById("projects-grid"), empty: document.getElementById("empty-projects-msg"), refresh: document.getElementById("refresh-projects-btn") },
         item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
         users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
-        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived") },
+        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), alerts: document.getElementById("tab-alerts"), users: document.getElementById("tab-users") },
         editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn") },
         userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
       };
@@ -385,21 +416,46 @@
       });
 
       // Tab Switching
-      ui.tabs.active.addEventListener('click', () => {
+      
+      let syncedNotifications = [];
+      let unsubNotifications = null;
+
+      function switchTab(tabId) {
+         currentTab = tabId;
+         ['active', 'archived', 'alerts', 'users'].forEach(t => {
+            ui.tabs[t].className = "text-xl font-bold pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b-2 " + (t === tabId ? "text-brand-600 border-brand-600" : "text-slate-400 border-transparent hover:text-slate-600");
+         });
+         ui.sections.details.classList.add("hidden");
+         
+         document.getElementById('projects-grid').classList.toggle('hidden', !['active','archived'].includes(tabId));
+         document.getElementById('projects-grid').style.display = ['active','archived'].includes(tabId) ? '' : 'none';
+         
+         document.getElementById('users-grid').classList.toggle('hidden', tabId !== 'users');
+         document.getElementById('users-grid').style.display = tabId === 'users' ? 'grid' : 'none';
+         
+         document.getElementById('alerts-grid').classList.toggle('hidden', tabId !== 'alerts');
+         document.getElementById('alerts-grid').style.display = tabId === 'alerts' ? 'grid' : 'none';
+
+         if (['active','archived'].includes(tabId)) renderProjects();
+         if (tabId === 'users') renderUsers();
+         if (tabId === 'alerts') renderNotifications();
+      }
+
+      ui.tabs.active.addEventListener('click', () => switchTab('active'));
+      ui.tabs.archived.addEventListener('click', () => switchTab('archived'));
+      ui.tabs.alerts.addEventListener('click', () => switchTab('alerts'));
+      ui.tabs.users.addEventListener('click', () => switchTab('users'));
+/*
          currentTab = 'active';
          ui.tabs.active.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
          ui.tabs.archived.className = "text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         ui.sections.details.classList.add("hidden");
-         renderProjects();
-      });
+         */
 
-      ui.tabs.archived.addEventListener('click', () => {
+      /* 
          currentTab = 'archived';
          ui.tabs.archived.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
          ui.tabs.active.className = "text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         ui.sections.details.classList.add("hidden");
-         renderProjects();
-      });
+         */
 
       // --- AUTH FLOW ---
       onAuthStateChanged(auth, async (user) => {
@@ -578,6 +634,21 @@
            buildSyncedData();
         });
 
+        if (unsubNotifications) unsubNotifications();
+        unsubNotifications = onSnapshot(query(collection(db, "Notifications"), orderBy("createdAt", "desc")), (snapshot) => {
+           syncedNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+           const unread = syncedNotifications.filter(n => !n.isRead && n.userId === 'admin').length;
+           const badge = document.getElementById('alerts-badge');
+           if (unread > 0) {
+              badge.textContent = unread;
+              badge.classList.remove('hidden');
+           } else {
+              badge.classList.add('hidden');
+           }
+           if (currentTab === 'alerts') renderNotifications();
+        });
+
+
         const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
         unsubProjects = onSnapshot(qProjects, (snapshot) => {
            localProjects = snapshot.docs.map(doc => {
@@ -591,6 +662,21 @@
            buildSyncedData();
         });
 
+        if (unsubNotifications) unsubNotifications();
+        unsubNotifications = onSnapshot(query(collection(db, "Notifications"), orderBy("createdAt", "desc")), (snapshot) => {
+           syncedNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+           const unread = syncedNotifications.filter(n => !n.isRead && n.userId === 'admin').length;
+           const badge = document.getElementById('alerts-badge');
+           if (unread > 0) {
+              badge.textContent = unread;
+              badge.classList.remove('hidden');
+           } else {
+              badge.classList.add('hidden');
+           }
+           if (currentTab === 'alerts') renderNotifications();
+        });
+
+
         unsubItems = onSnapshot(collectionGroup(db, "items"), (snapshot) => {
            allItems = snapshot.docs.map(doc => {
               const pName = doc.ref.parent.parent.id;
@@ -598,6 +684,21 @@
            });
            buildSyncedData();
         });
+
+        if (unsubNotifications) unsubNotifications();
+        unsubNotifications = onSnapshot(query(collection(db, "Notifications"), orderBy("createdAt", "desc")), (snapshot) => {
+           syncedNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+           const unread = syncedNotifications.filter(n => !n.isRead && n.userId === 'admin').length;
+           const badge = document.getElementById('alerts-badge');
+           if (unread > 0) {
+              badge.textContent = unread;
+              badge.classList.remove('hidden');
+           } else {
+              badge.classList.add('hidden');
+           }
+           if (currentTab === 'alerts') renderNotifications();
+        });
+
       }
 
       ui.proj.refresh.addEventListener("click", () => {
@@ -625,6 +726,40 @@
         } catch (e) { showMessage(e.message, false); }
         finally { ui.proj.btn.disabled = false; ui.proj.btn.innerText = "Create Project"; }
       });
+
+      
+      async function markRead(id) {
+         await db.collection('Notifications').doc(id).set({ isRead: true }, { merge: true });
+      }
+
+      function renderNotifications() {
+         const grid = document.getElementById('alerts-grid');
+         grid.innerHTML = "";
+         const adminNotifs = syncedNotifications.filter(n => n.userId === 'admin');
+         
+         if (adminNotifs.length === 0) {
+            document.getElementById('empty-alerts-msg').classList.remove('hidden');
+            return;
+         }
+         document.getElementById('empty-alerts-msg').classList.add('hidden');
+
+         adminNotifs.forEach(notif => {
+            const card = document.createElement("div");
+            card.className = `p-4 border rounded-lg shadow-sm ${notif.isRead ? 'bg-white border-slate-200' : 'bg-brand-50 border-brand-200'}`;
+            const dateStr = notif.createdAt ? new Date(notif.createdAt.seconds * 1000).toLocaleString() : 'Just now';
+            card.innerHTML = `
+              <div class="flex justify-between items-start">
+                 <div>
+                    <h4 class="font-bold text-slate-800 text-lg">${notif.title}</h4>
+                    <p class="text-slate-600 mt-1">${notif.message}</p>
+                    <p class="text-xs text-slate-400 mt-2">${dateStr}</p>
+                 </div>
+                 ${!notif.isRead ? `<button class="text-xs font-semibold text-brand-600 hover:text-brand-800" onclick="markRead('${notif.id}')">Mark Read</button>` : ''}
+              </div>
+            `;
+            grid.appendChild(card);
+         });
+      }
 
       function renderProjects() {
          ui.proj.grid.innerHTML = "";
@@ -731,6 +866,11 @@
 
       function openUserModal(user) {
          ui.userModal.title.textContent = user.name || 'Unknown';
+
+         document.getElementById('user-edit-email').value = user.email || '';
+         document.getElementById('user-edit-role').value = user.role || 'User';
+         document.getElementById('user-edit-script').value = user.scriptUrl || '';
+
          ui.userModal.balance.textContent = `EGP ${user.balance || 0}`;
          ui.userModal.items.innerHTML = "";
 
@@ -765,8 +905,33 @@
              });
          }
 
+         
          ui.userModal.el.classList.remove("hidden");
       }
+
+      document.getElementById('user-save-btn').addEventListener('click', async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const role = document.getElementById('user-edit-role').value;
+         const scriptUrl = document.getElementById('user-edit-script').value.trim();
+         
+         const btn = document.getElementById('user-save-btn');
+         btn.disabled = true;
+         btn.textContent = "Saving...";
+
+         try {
+             await db.collection('users').doc(email).set({
+                 role: role,
+                 scriptUrl: scriptUrl
+             }, { merge: true });
+             alert("User updated successfully!");
+         } catch (e) {
+             alert("Failed to update user: " + e.message);
+         } finally {
+             btn.disabled = false;
+             btn.textContent = "Save User Settings";
+         }
+      });
+
 
       ui.userModal.btnClose.addEventListener("click", () => ui.userModal.el.classList.add("hidden"));
       ui.userModal.bg.addEventListener("click", () => ui.userModal.el.classList.add("hidden"));
@@ -794,6 +959,15 @@
          }
 
          listDiv.innerHTML = '';
+
+         let totalExpenses = 0;
+         project.items.forEach(item => {
+             if (item.itemName.startsWith('EXPENSE:')) {
+                 totalExpenses += (item.totalPrice || item.piecePrice || 0);
+             }
+         });
+         document.getElementById('detail-project-expenses').textContent = `EGP ${totalExpenses}`;
+
          project.items.forEach(item => {
              const itemRow = document.createElement("div");
              const isBought = item.status === 'Bought';
@@ -867,7 +1041,7 @@
          try {
            ui.item.existing.innerHTML = '<p class="text-slate-500 text-sm italic">Saving changes to server...</p>';
            
-           const estPriceRange = (newPriceFrom && newPriceTo) ? `$${newPriceFrom}-$${newPriceTo}` : '';
+           const estPriceRange = (newPriceFrom && newPriceTo) ? `EGP ${newPriceFrom} - EGP ${newPriceTo}` : '';
            
            const payload = { 
                projectName, 
@@ -973,7 +1147,7 @@
              }
          }
 
-         const estPriceString = (priceFrom && priceTo) ? `$${priceFrom}-$${priceTo}` : '';
+         const estPriceString = (priceFrom && priceTo) ? `EGP ${priceFrom} - EGP ${priceTo}` : '';
 
          pendingItems.push({ 
              itemName, 

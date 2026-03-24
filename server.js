@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/app', express.static(path.join(__dirname, 'public/app')));
 
 // Replace with your deployed Google Apps Script Web App URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyxaekFT3SBMR74AlidIC7SlKxOEfkTo0avE1MBWb7dvY1rhQ1c4pwq3VJnLWovqiw9A/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvrMNBwbwJsQI66REwhbJS71qsitqf5r_ykLU6qnvM4SBRao4wqBTOhCL7L9_Osfjf0w/exec';
 
 // All authorized admin accounts — used for access control and notifications
 const ADMIN_EMAILS = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com', 'farah.ashraf@sirkil.com'];
@@ -618,7 +618,7 @@ const transporter = nodemailer.createTransport({
 
 // Endpoint to send an email
 app.post('/api/send-email', async (req, res) => {
-  const { to, subject, htmlBody } = req.body;
+  const { to, cc, subject, htmlBody } = req.body;
 
   if (!to || !subject || !htmlBody) {
     return res.status(400).json({ error: 'Missing to, subject, or htmlBody' });
@@ -628,6 +628,7 @@ app.post('/api/send-email', async (req, res) => {
     const info = await transporter.sendMail({
       from: `"Sirkil Operation" <${process.env.SMTP_EMAIL}>`,
       to,
+      cc,
       subject,
       html: htmlBody
     });
