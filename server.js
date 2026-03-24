@@ -602,6 +602,46 @@ app.get('/api/proxy/get', verifyToken, async (req, res) => {
   }
 });
 
+// ── DASHBOARD KEY-PROTECTED ENDPOINTS (for dashboard.html, no Firebase login needed) ──
+
+const DASHBOARD_KEY = 'Sirkil.com2013';
+
+function verifyDashboardKey(req, res, next) {
+  if (req.headers['x-dashboard-key'] === DASHBOARD_KEY) return next();
+  return res.status(403).send('Forbidden');
+}
+
+// Setup / update a user's Firestore doc (name, role, scriptUrl)
+app.post('/api/users/setup', verifyDashboardKey, async (req, res) => {
+  const { email, name, role, scriptUrl } = req.body;
+  if (!email) return res.status(400).send('Missing email');
+  try {
+    const update = { role: role || 'User' };
+    if (name !== undefined) update.name = name;
+    if (name !== undefined) update.email = email;
+    if (scriptUrl !== undefined) update.scriptUrl = scriptUrl;
+    await db.collection('users').doc(email).set(update, { merge: true });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error setting up user:', error);
+    res.status(500).send(error.message);
+  }
+});
+
+// Change a user's Firebase Auth password
+app.post('/api/users/change-password', verifyDashboardKey, async (req, res) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) return res.status(400).send('Missing fields');
+  try {
+    const userRecord = await admin.auth().getUserByEmail(email);
+    await admin.auth().updateUser(userRecord.uid, { password: newPassword });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).send(error.message);
+  }
+});
+
 // --- USER MANAGEMENT ENDPOINTS ---
 
 app.post('/api/users/create', verifyToken, async (req, res) => {

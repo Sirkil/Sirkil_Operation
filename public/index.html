@@ -392,7 +392,7 @@
         proj: { name: document.getElementById("project-name"), btn: document.getElementById("create-project-btn"), msg: document.getElementById("action-msg"), grid: document.getElementById("projects-grid"), empty: document.getElementById("empty-projects-msg"), refresh: document.getElementById("refresh-projects-btn") },
         item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
         users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
-        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), alerts: document.getElementById("tab-alerts"), users: document.getElementById("tab-users") },
+        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), alerts: document.getElementById("tab-alerts") },
         editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn"), status: document.getElementById("edit-item-status") },
         userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
       };
@@ -446,29 +446,21 @@
 
       function switchTab(tabId) {
          currentTab = tabId;
-         ['active', 'archived', 'alerts', 'users'].forEach(t => {
+         ['active', 'archived', 'alerts'].forEach(t => {
             ui.tabs[t].className = "text-xl font-bold pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b-2 " + (t === tabId ? "text-brand-600 border-brand-600" : "text-slate-400 border-transparent hover:text-slate-600");
          });
          ui.sections.details.classList.add("hidden");
          
-         document.getElementById('projects-grid').classList.toggle('hidden', !['active','archived'].includes(tabId));
          document.getElementById('projects-grid').style.display = ['active','archived'].includes(tabId) ? '' : 'none';
-         
-         document.getElementById('users-grid').classList.toggle('hidden', tabId !== 'users');
-         document.getElementById('users-grid').style.display = tabId === 'users' ? 'grid' : 'none';
-         
-         document.getElementById('alerts-grid').classList.toggle('hidden', tabId !== 'alerts');
          document.getElementById('alerts-grid').style.display = tabId === 'alerts' ? 'grid' : 'none';
 
          if (['active','archived'].includes(tabId)) renderProjects();
-         if (tabId === 'users') renderUsers();
          if (tabId === 'alerts') renderNotifications();
       }
 
       ui.tabs.active.addEventListener('click', () => switchTab('active'));
       ui.tabs.archived.addEventListener('click', () => switchTab('archived'));
       ui.tabs.alerts.addEventListener('click', () => switchTab('alerts'));
-      ui.tabs.users.addEventListener('click', () => switchTab('users'));
 /*
          currentTab = 'active';
          ui.tabs.active.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";

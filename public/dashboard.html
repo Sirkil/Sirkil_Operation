@@ -3,101 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sirkil User Management</title>
-    <!-- Modern font (Inter) -->
+    <title>Sirkil – User Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com">
-      // ADD USER LOGIC
-      document.getElementById('create-user-btn').addEventListener("click", async () => {
-         const name = document.getElementById("new-user-name").value.trim();
-         const email = document.getElementById("new-user-email").value.trim();
-         const pass = document.getElementById("new-user-password").value;
-         
-         if (!name || !email || !pass) return alert("Fill all fields");
-         
-         const btn = document.getElementById("create-user-btn");
-         btn.disabled = true; btn.textContent = "Creating...";
-
-         try {
-            const res = await fetch("/api/users/create", {
-               method: "POST",
-               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-               body: JSON.stringify({ name, email, password: pass })
-            });
-
-            if (res.ok) {
-               alert("Account successfully created!");
-               document.getElementById("new-user-name").value = "";
-               document.getElementById("new-user-email").value = "";
-               document.getElementById("new-user-password").value = "";
-               loadData();
-            } else {
-               throw new Error(await res.text());
-            }
-         } catch(e) { alert("Failed to create user: " + e.message); }
-         finally { btn.disabled = false; btn.textContent = "Create Account"; }
-      });
-
-      // CHANGE PASSWORD LOGIC
-      document.getElementById('user-update-password-btn').addEventListener('click', async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const newPass = document.getElementById('user-edit-new-password').value;
-         
-         if (!newPass || newPass.length < 6) return alert("Password must be at least 6 characters.");
-         
-         const btn = document.getElementById('user-update-password-btn');
-         const oldText = btn.textContent;
-         btn.disabled = true; btn.textContent = "Working...";
-
-         try {
-             const res = await fetch("/api/users/update-password", {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify({ email, newPassword: newPass })
-             });
-             
-             if (res.ok) {
-                 alert("Password updated successfully!");
-                 document.getElementById('user-edit-new-password').value = "";
-                 ui.userModal.el.classList.add("hidden");
-             } else {
-                 throw new Error(await res.text());
-             }
-         } catch (e) { alert("Failed to update password: " + e.message); }
-         finally { btn.disabled = false; btn.textContent = oldText; }
-      });
-      
-      // Hook up UI role edit
-      document.getElementById('user-save-btn').onclick = async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const role = document.getElementById('user-edit-role').value;
-         const scriptUrl = document.getElementById('user-edit-script').value.trim();
-         
-         const btn = document.getElementById('user-save-btn');
-         btn.disabled = true;
-         btn.textContent = "Saving...";
-
-         try {
-             const res = await fetch("/api/users/update-profile", {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify({ email, role, scriptUrl })
-             });
-             if (res.ok) {
-                 alert("User updated successfully!");
-                 ui.userModal.el.classList.add("hidden");
-             } else {
-                 throw new Error(await res.text());
-             }
-         } catch (e) {
-             alert("Failed to update user: " + e.message);
-         } finally {
-             btn.disabled = false;
-             btn.textContent = "Save User Settings";
-         }
-      };
-
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -109,279 +17,118 @@
           }
         }
       }
-    
-      // ADD USER LOGIC
-      document.getElementById('create-user-btn').addEventListener("click", async () => {
-         const name = document.getElementById("new-user-name").value.trim();
-         const email = document.getElementById("new-user-email").value.trim();
-         const pass = document.getElementById("new-user-password").value;
-         
-         if (!name || !email || !pass) return alert("Fill all fields");
-         
-         const btn = document.getElementById("create-user-btn");
-         btn.disabled = true; btn.textContent = "Creating...";
-
-         try {
-            const res = await fetch("/api/users/create", {
-               method: "POST",
-               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-               body: JSON.stringify({ name, email, password: pass })
-            });
-
-            if (res.ok) {
-               alert("Account successfully created!");
-               document.getElementById("new-user-name").value = "";
-               document.getElementById("new-user-email").value = "";
-               document.getElementById("new-user-password").value = "";
-               loadData();
-            } else {
-               throw new Error(await res.text());
-            }
-         } catch(e) { alert("Failed to create user: " + e.message); }
-         finally { btn.disabled = false; btn.textContent = "Create Account"; }
-      });
-
-      // CHANGE PASSWORD LOGIC
-      document.getElementById('user-update-password-btn').addEventListener('click', async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const newPass = document.getElementById('user-edit-new-password').value;
-         
-         if (!newPass || newPass.length < 6) return alert("Password must be at least 6 characters.");
-         
-         const btn = document.getElementById('user-update-password-btn');
-         const oldText = btn.textContent;
-         btn.disabled = true; btn.textContent = "Working...";
-
-         try {
-             const res = await fetch("/api/users/update-password", {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify({ email, newPassword: newPass })
-             });
-             
-             if (res.ok) {
-                 alert("Password updated successfully!");
-                 document.getElementById('user-edit-new-password').value = "";
-                 ui.userModal.el.classList.add("hidden");
-             } else {
-                 throw new Error(await res.text());
-             }
-         } catch (e) { alert("Failed to update password: " + e.message); }
-         finally { btn.disabled = false; btn.textContent = oldText; }
-      });
-      
-      // Hook up UI role edit
-      document.getElementById('user-save-btn').onclick = async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const role = document.getElementById('user-edit-role').value;
-         const scriptUrl = document.getElementById('user-edit-script').value.trim();
-         
-         const btn = document.getElementById('user-save-btn');
-         btn.disabled = true;
-         btn.textContent = "Saving...";
-
-         try {
-             const res = await fetch("/api/users/update-profile", {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify({ email, role, scriptUrl })
-             });
-             if (res.ok) {
-                 alert("User updated successfully!");
-                 ui.userModal.el.classList.add("hidden");
-             } else {
-                 throw new Error(await res.text());
-             }
-         } catch (e) {
-             alert("Failed to update user: " + e.message);
-         } finally {
-             btn.disabled = false;
-             btn.textContent = "Save User Settings";
-         }
-      };
-
-</script>
-    <style>
-      /* Dropdown Menu Animation */
-      .dropdown-content { display: none; }
-      .dropdown-content.show { display: block; animation: fadeIn 0.15s ease-out; }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    </script>
   </head>
-  <body class="bg-slate-50 font-sans text-slate-800">
-    
-    <!-- AUTH SECTION -->
-    <div id="auth-section" class="flex items-center justify-center min-h-screen">
-      <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+  <body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
+
+    <!-- PASSWORD GATE -->
+    <div id="gate-section" class="flex items-center justify-center min-h-screen">
+      <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-sm border border-slate-100">
         <div class="text-center mb-8">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-brand-50 mb-4">
-            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
           </div>
-          <h2 class="text-2xl font-bold text-slate-900">Admin Portal</h2>
-          <p class="text-slate-500 text-sm mt-2">Log in with your administrator account.</p>
+          <h2 class="text-2xl font-bold text-slate-900">User Management</h2>
+          <p class="text-slate-500 text-sm mt-2">Enter the admin access key to continue.</p>
         </div>
-
         <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-            <input type="email" id="email" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="admin@sirkil.com" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <input type="password" id="password" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
-          </div>
-          <button id="login-btn" class="w-full bg-brand-600 text-white font-medium p-3 rounded-lg hover:bg-brand-700 active:bg-brand-900 transition mt-2">Sign In</button>
-          <p id="auth-error" class="text-red-500 text-sm text-center mt-4 hidden"></p>
+          <input type="password" id="gate-password" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Access Key" />
+          <button id="gate-btn" class="w-full bg-brand-600 text-white font-medium p-3 rounded-lg hover:bg-brand-700 transition">Unlock</button>
+          <p id="gate-error" class="text-red-500 text-sm text-center hidden">Incorrect key. Try again.</p>
         </div>
       </div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
+    <!-- MAIN DASHBOARD (hidden until password is correct) -->
     <div id="dashboard-section" class="hidden min-h-screen flex flex-col">
-            <!-- Top Nav -->
-      <nav class="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col sm:flex-row justify-between items-center sm:sticky top-0 z-10 gap-4 sm:gap-0">
+      <!-- Top Nav -->
+      <nav class="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-10">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold">U</div>
-          <h1 class="text-xl font-bold text-slate-900">User Management Portal</h1>
+          <h1 class="text-xl font-bold text-slate-900">User Management</h1>
         </div>
         <div class="flex items-center gap-4">
-          <a href="/" class="text-sm font-medium text-brand-600 hover:text-brand-700 underline bg-brand-50 px-3 py-1 rounded-full border border-brand-200">Operations Control</a>
-          <button id="logout-btn" class="text-sm font-medium text-slate-600 hover:text-red-600 transition">Log Out</button>
+          <a href="/" class="text-sm font-medium text-brand-600 hover:underline bg-brand-50 px-3 py-1 rounded-full border border-brand-200">← Operations Control</a>
+          <button id="lock-btn" class="text-sm font-medium text-slate-600 hover:text-red-600 transition">Lock</button>
         </div>
       </nav>
-      <div class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-          <!-- Add User Form -->
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-            <h2 class="text-lg font-bold text-slate-900 mb-4">Create New Account</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Name</label>
-                <input type="text" id="new-user-name" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Full Name">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input type="email" id="new-user-email" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="user@sirkil.com">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <input type="password" id="new-user-password" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Min 6 chars">
-              </div>
-              <div>
-                <button id="create-user-btn" class="w-full bg-slate-900 text-white font-medium p-2.5 rounded hover:bg-slate-800 transition">Create Account</button>
-              </div>
+
+      <!-- Content -->
+      <div class="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
+
+        <!-- Create Account Card -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+          <h2 class="text-lg font-bold text-slate-900 mb-1">Create New Account</h2>
+          <p class="text-sm text-slate-500 mb-5">After creating, share the email and password directly with the user.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+              <input type="text" id="new-user-name" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Ahmed Tanany">
             </div>
-            <p id="create-user-msg" class="text-sm mt-3 hidden"></p>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input type="email" id="new-user-email" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="user@sirkil.com">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <input type="text" id="new-user-password" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Set a strong password">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+              <select id="new-user-role" class="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+                <option value="User">User (Mobile App Access)</option>
+                <option value="Admin">Admin (Admin Panel Access)</option>
+              </select>
+            </div>
           </div>
+          <div class="mt-4 flex items-center gap-4">
+            <button id="create-user-btn" class="bg-slate-900 text-white font-medium px-6 py-2.5 rounded-lg hover:bg-slate-800 transition">Create Account</button>
+            <p id="create-msg" class="text-sm hidden"></p>
+          </div>
+        </div>
 
-          <!-- Users Grid -->
-          <div class="mb-4 flex justify-between items-center border-b border-slate-200 pb-2">
-             <h3 class="text-xl font-bold text-slate-800">Existing Users</h3>
-          </div>
-          <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
-            <p id="empty-users-msg" class="text-slate-500 col-span-full">Loading users...</p>
-          </div>
-      </div>
-<!-- User Details Modal -->
-    <div id="user-details-modal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="user-modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" id="user-modal-bg"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
-          <div class="bg-slate-50 border-b border-slate-200 px-4 py-4 sm:px-6 flex justify-between items-center">
-             <div>
-                <h3 class="text-xl font-bold text-slate-900" id="user-modal-title">User Name</h3>
-                <p class="text-sm font-medium text-brand-600 mt-1">Balance: <span id="user-modal-balance">EGP 0</span></p>
-             </div>
-             <button id="close-user-modal-btn" class="text-slate-400 hover:text-slate-600 bg-white border border-slate-200 shadow-sm rounded-full p-2">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-             </button>
-          </div>
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-             <div class="mb-4 space-y-3 border-b border-slate-100 pb-4">
-                <h4 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Management Settings</h4>
-                <div class="flex gap-4">
-                  <div class="w-1/2">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Role</label>
-                    <select id="user-edit-role" class="w-full p-2 border border-slate-300 rounded outline-none text-sm bg-slate-50">
-                       <option value="User">User</option>
-                       <option value="Admin">Admin</option>
-                    </select>
-                  </div>
-                  <div class="w-1/2">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">Status</label>
-                    <button id="user-edit-status-btn" class="w-full p-2 border border-slate-300 rounded outline-none text-sm bg-slate-50 text-slate-700 font-medium">Active</button>
-                  </div>
-                </div>
-                <div>
-                   <label class="block text-xs font-semibold text-slate-500 mb-1">Apps Script URL</label>
-                   <input type="text" id="user-edit-script" class="w-full p-2 border border-slate-300 rounded outline-none text-sm" placeholder="https://script.google.com/macros/..." />
-                </div>
-                <button id="user-save-btn" class="w-full bg-slate-900 text-white p-2 rounded text-sm font-medium hover:bg-slate-800 transition">Save User Settings</button>
-                <input type="hidden" id="user-edit-email" />
-             </div>
-
-             
-                <h4 class="font-bold text-slate-700 mt-6 mb-3 text-sm uppercase tracking-wider">Change Password</h4>
-                <div class="flex gap-4 items-end mb-4 border-b border-slate-100 pb-4">
-                   <div class="flex-1">
-                      <input type="password" id="user-edit-new-password" placeholder="New Password" class="w-full p-2 border border-slate-300 rounded outline-none text-sm" />
-                   </div>
-                   <button id="user-update-password-btn" class="bg-red-50 text-red-600 px-4 py-2 border border-red-200 rounded text-sm font-medium hover:bg-red-100 transition whitespace-nowrap">Update Password</button>
-                </div>
-<h4 class="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wider">Assigned Items</h4>
-             <div id="user-assigned-items" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
-                 <p class="text-slate-500 text-sm italic">Loading items...</p>
-             </div>
-          </div>
+        <!-- Users List -->
+        <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-5">
+          <h3 class="text-xl font-bold text-slate-800">Existing Accounts</h3>
+          <button id="refresh-btn" class="text-sm text-brand-600 hover:underline font-medium">Refresh</button>
+        </div>
+        <div id="users-list" class="space-y-3">
+          <p class="text-slate-500 italic text-sm">Loading accounts...</p>
         </div>
       </div>
     </div>
 
-    <!-- Rename Project Modal (Issue 3) -->
-    <div id="rename-modal" class="hidden fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+    <!-- Edit User Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
       <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('rename-modal').classList.add('hidden')"></div>
-        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm border border-slate-100 z-10">
-          <div class="px-6 py-5 border-b border-slate-100">
-            <h3 class="text-lg font-bold text-slate-900">Rename Project</h3>
-            <p class="text-sm text-slate-500 mt-1">This will update the name in the app and all related sheets.</p>
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 backdrop-blur-sm" id="edit-modal-bg"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10">
+          <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-900" id="edit-modal-title">Edit Account</h3>
+            <button id="edit-modal-close" class="text-slate-400 hover:text-slate-600">✕</button>
           </div>
-          <div class="px-6 py-4 space-y-3">
-            <input type="hidden" id="rename-old-name" />
+          <div class="px-6 py-5 space-y-4">
+            <input type="hidden" id="edit-user-email" />
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">New Project Name</label>
-              <input type="text" id="rename-new-name" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" placeholder="Enter new project name" />
+              <label class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+              <select id="edit-user-role" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none bg-white">
+                <option value="User">User</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Apps Script URL</label>
+              <input type="text" id="edit-user-script" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none" placeholder="https://script.google.com/..." />
+            </div>
+            <hr class="border-slate-100"/>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Change Password <span class="text-slate-400 font-normal">(leave blank to keep current)</span></label>
+              <input type="text" id="edit-user-password" class="w-full p-2.5 border border-slate-300 rounded-lg outline-none" placeholder="New password (min 6 chars)" />
             </div>
           </div>
           <div class="px-6 py-4 bg-slate-50 rounded-b-xl flex gap-3 justify-end border-t border-slate-100">
-            <button onclick="document.getElementById('rename-modal').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Cancel</button>
-            <button id="rename-confirm-btn" onclick="renameProject()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition">Rename</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Notification/Alert Modal -->
-
-    <div id="alert-modal" class="hidden fixed inset-0 z-[120] overflow-y-auto" aria-labelledby="alert-modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 transition-opacity backdrop-blur-sm" aria-hidden="true" id="alert-modal-bg"></div>
-        <div class="inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm w-full border border-slate-100">
-          <div class="bg-white px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start flex-col items-center">
-              <div id="alert-modal-icon-container" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full mb-4">
-                <svg id="alert-modal-icon" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"></svg>
-              </div>
-              <div class="mt-3 text-center sm:mt-0 w-full mb-2">
-                <h3 class="text-lg leading-6 font-bold text-slate-900" id="alert-modal-title">Notification</h3>
-                <div class="mt-3">
-                  <p class="text-sm text-slate-500" id="alert-modal-message">Message text goes here.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-100">
-            <button type="button" id="alert-modal-btn" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-slate-900 text-base font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 sm:ml-3 sm:w-auto sm:text-sm">OK</button>
+            <button id="edit-modal-cancel" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
+            <button id="edit-modal-save" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700">Save Changes</button>
           </div>
         </div>
       </div>
@@ -389,9 +136,10 @@
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-      import { getFirestore, collection, collectionGroup, onSnapshot, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-      
+      import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+      const GATE_PASSWORD = "Sirkil.com2013";
+
       const firebaseConfig = {
         apiKey: "AIzaSyDvGSwwc5-oY49AdPT_G4a_5NmmSnsmbyU",
         authDomain: "sirkil-operation-expenses.firebaseapp.com",
@@ -401,1001 +149,196 @@
         appId: "1:76114714089:web:1da952ab54d984527a3f78"
       };
 
-      const app = initializeApp(firebaseConfig, "AdminPortal");
-      const auth = getAuth(app);
-      setPersistence(auth, browserSessionPersistence);
+      const app = initializeApp(firebaseConfig, "UserMgmt");
       const db = getFirestore(app);
 
-      // DOM Elements
-      const ui = {
-        sections: { auth: document.getElementById("auth-section"), dash: document.getElementById("dashboard-section"), details: document.getElementById("project-details-section") },
-        auth: { email: document.getElementById("email"), pass: document.getElementById("password"), btn: document.getElementById("login-btn"), err: document.getElementById("auth-error"), out: document.getElementById("logout-btn") },
-        proj: { name: document.getElementById("project-name"), btn: document.getElementById("create-project-btn"), msg: document.getElementById("action-msg"), grid: document.getElementById("projects-grid"), empty: document.getElementById("empty-projects-msg"), refresh: document.getElementById("refresh-projects-btn") },
-        item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
-        users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
-        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), alerts: document.getElementById("tab-alerts"), users: document.getElementById("tab-users") },
-        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn") },
-        userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
-      };
+      let syncedUsers = [];
+      let editingEmail = null;
+      let adminToken = null; // We need a token to call the backend API — we'll use the Firebase API key directly
 
-      let currentUserToken = null;
-      let currentUserEmail = null;
-      let activeProject = null;
-      let currentTab = 'active';
-      
-      let localProjects = [];
-      let pendingItems = [];
-      let syncedData = []; // Rebuilt structure
-      let syncedUsers = []; 
-      let allItems = []; // Flat list of all items from Firestore
-      
-      function customAlert(message, title = "Notification", forceError = false) {
-         const isError = forceError || message.toLowerCase().includes('error') || message.toLowerCase().includes('failed');
-         document.getElementById('alert-modal-title').textContent = isError ? "Error" : title;
-         document.getElementById('alert-modal-message').textContent = message;
-         const container = document.getElementById('alert-modal-icon-container');
-         const icon = document.getElementById('alert-modal-icon');
-         if (isError) {
-            container.className = "mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4";
-            icon.setAttribute('stroke', '#dc2626');
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />';
-         } else {
-            container.className = "mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4";
-            icon.setAttribute('stroke', '#16a34a');
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
-         }
-         document.getElementById('alert-modal').classList.remove('hidden');
+      // ── GATE LOGIC ──────────────────────────────────────────────────────────
+      document.getElementById('gate-btn').addEventListener('click', unlock);
+      document.getElementById('gate-password').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+      function unlock() {
+        const val = document.getElementById('gate-password').value;
+        if (val === GATE_PASSWORD) {
+          document.getElementById('gate-section').classList.add('hidden');
+          document.getElementById('dashboard-section').classList.remove('hidden');
+          startListening();
+        } else {
+          document.getElementById('gate-error').classList.remove('hidden');
+          document.getElementById('gate-password').value = '';
+        }
       }
 
-      document.getElementById('alert-modal-btn').addEventListener('click', () => document.getElementById('alert-modal').classList.add('hidden'));
-      document.getElementById('alert-modal-bg').addEventListener('click', () => document.getElementById('alert-modal').classList.add('hidden'));
-      window.alert = function(msg) { customAlert(msg); };
-
-      let editingItemContext = null;
-
-      // Close all dropdowns if clicked outside
-      window.addEventListener('click', function(event) {
-          if (!event.target.closest('.relative')) {
-              document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
-          }
+      document.getElementById('lock-btn').addEventListener('click', () => {
+        document.getElementById('dashboard-section').classList.add('hidden');
+        document.getElementById('gate-section').classList.remove('hidden');
+        document.getElementById('gate-password').value = '';
       });
 
-      // Tab Switching
-      
-      let syncedNotifications = [];
-      let unsubNotifications = null;
-
-      function switchTab(tabId) {
-         currentTab = tabId;
-         ['active', 'archived', 'alerts', 'users'].forEach(t => {
-            ui.tabs[t].className = "text-xl font-bold pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b-2 " + (t === tabId ? "text-brand-600 border-brand-600" : "text-slate-400 border-transparent hover:text-slate-600");
-         });
-         ui.sections.details.classList.add("hidden");
-         
-         document.getElementById('projects-grid').classList.toggle('hidden', !['active','archived'].includes(tabId));
-         document.getElementById('projects-grid').style.display = ['active','archived'].includes(tabId) ? '' : 'none';
-         
-         document.getElementById('users-grid').classList.toggle('hidden', tabId !== 'users');
-         document.getElementById('users-grid').style.display = tabId === 'users' ? 'grid' : 'none';
-         
-         document.getElementById('alerts-grid').classList.toggle('hidden', tabId !== 'alerts');
-         document.getElementById('alerts-grid').style.display = tabId === 'alerts' ? 'grid' : 'none';
-
-         if (['active','archived'].includes(tabId)) renderProjects();
-         if (tabId === 'users') renderUsers();
-         if (tabId === 'alerts') renderNotifications();
+      // ── FIRESTORE LISTENER ──────────────────────────────────────────────────
+      function startListening() {
+        onSnapshot(collection(db, "users"), snapshot => {
+          syncedUsers = snapshot.docs.map(d => ({ email: d.id, ...d.data() }));
+          renderUsers();
+        });
       }
 
-      ui.tabs.active.addEventListener('click', () => switchTab('active'));
-      ui.tabs.archived.addEventListener('click', () => switchTab('archived'));
-      ui.tabs.alerts.addEventListener('click', () => switchTab('alerts'));
-      ui.tabs.users.addEventListener('click', () => switchTab('users'));
-/*
-         currentTab = 'active';
-         ui.tabs.active.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         ui.tabs.archived.className = "text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         */
+      // ── RENDER USERS ────────────────────────────────────────────────────────
+      function renderUsers() {
+        const list = document.getElementById('users-list');
+        if (syncedUsers.length === 0) {
+          list.innerHTML = '<p class="text-slate-500 italic text-sm">No accounts found.</p>';
+          return;
+        }
+        list.innerHTML = '';
+        syncedUsers.forEach(u => {
+          const isAdmin = u.role === 'Admin';
+          const row = document.createElement('div');
+          row.className = 'bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm';
+          row.innerHTML = `
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-lg text-slate-600">
+                ${(u.name || u.email).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div class="font-semibold text-slate-800">${u.name || '—'}</div>
+                <div class="text-sm text-slate-500">${u.email}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full border ${isAdmin ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-slate-100 text-slate-600 border-slate-200'}">${u.role || 'User'}</span>
+              <button data-email="${u.email}" class="edit-btn text-sm font-medium text-brand-600 hover:text-brand-800 bg-brand-50 border border-brand-200 px-3 py-1.5 rounded-lg transition">Edit</button>
+            </div>
+          `;
+          list.appendChild(row);
+        });
 
-      /* 
-         currentTab = 'archived';
-         ui.tabs.archived.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         ui.tabs.active.className = "text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         */
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', () => openEdit(btn.dataset.email));
+        });
+      }
 
-      // --- AUTH FLOW ---
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com" , "omar@sirkil.com" , "amr@sirkil.com" , "farah.ashraf@sirkil.com"];
-          
-          let isAdmin = authorizedAdmins.includes(user.email);
-          if (!isAdmin) {
-             try {
-                const userDoc = await getDoc(doc(db, "users", user.email));
-                if (userDoc.exists() && userDoc.data().role === "Admin") {
-                   isAdmin = true;
-                }
-             } catch(e) { console.error("Error reading role", e); }
-          }
+      document.getElementById('refresh-btn').addEventListener('click', () => {
+        document.getElementById('users-list').innerHTML = '<p class="text-slate-500 italic text-sm">Refreshing...</p>';
+      });
 
-          if (!isAdmin) {
-             ui.sections.dash.classList.add("hidden");
-             ui.sections.auth.classList.remove("hidden");
-             ui.auth.err.textContent = "Access denied. Admin role required.";
-             ui.auth.err.classList.remove("hidden");
-             return;
-          }
-          currentUserToken = await user.getIdToken();
-          currentUserEmail = user.email;
-          ui.sections.auth.classList.add("hidden");
-          ui.sections.dash.classList.remove("hidden");
-          loadData();
-        } else {
-          currentUserToken = null;
-          currentUserEmail = null;
-          ui.sections.auth.classList.remove("hidden");
-          ui.sections.dash.classList.add("hidden");
+      // ── CREATE USER ─────────────────────────────────────────────────────────
+      document.getElementById('create-user-btn').addEventListener('click', async () => {
+        const name = document.getElementById('new-user-name').value.trim();
+        const email = document.getElementById('new-user-email').value.trim();
+        const password = document.getElementById('new-user-password').value;
+        const role = document.getElementById('new-user-role').value;
+        const msg = document.getElementById('create-msg');
+
+        if (!name || !email || !password) {
+          showMsg(msg, 'Please fill all fields.', false);
+          return;
+        }
+        if (password.length < 6) {
+          showMsg(msg, 'Password must be at least 6 characters.', false);
+          return;
+        }
+
+        const btn = document.getElementById('create-user-btn');
+        btn.disabled = true; btn.textContent = 'Creating...';
+
+        try {
+          // Use Firebase Auth REST API to create the user (no server token needed)
+          const apiKey = firebaseConfig.apiKey;
+          const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, returnSecureToken: false })
+          });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+
+          // Write to Firestore via our server endpoint
+          const fRes = await fetch('/api/users/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-dashboard-key': GATE_PASSWORD },
+            body: JSON.stringify({ email, name, role })
+          });
+          if (!fRes.ok) throw new Error(await fRes.text());
+
+          showMsg(msg, `✓ Account created! Email: ${email} | Pass: ${password}`, true);
+          document.getElementById('new-user-name').value = '';
+          document.getElementById('new-user-email').value = '';
+          document.getElementById('new-user-password').value = '';
+        } catch (e) {
+          showMsg(msg, 'Error: ' + e.message, false);
+        } finally {
+          btn.disabled = false; btn.textContent = 'Create Account';
         }
       });
 
-      ui.auth.btn.addEventListener("click", () => {
-        ui.auth.err.classList.add("hidden");
-        signInWithEmailAndPassword(auth, ui.auth.email.value, ui.auth.pass.value)
-          .catch(e => { ui.auth.err.textContent = e.message; ui.auth.err.classList.remove("hidden"); });
-      });
-
-      ui.auth.out.addEventListener("click", () => signOut(auth));
-
-      // --- PROJECT API FLOWS ---
-      window.toggleDrop = function(id, e) {
-          e.stopPropagation();
-          document.querySelectorAll('.dropdown-content').forEach(el => {
-              if(el.id !== `drop-${id}`) el.classList.remove('show');
-          });
-          document.getElementById(`drop-${id}`).classList.toggle('show');
+      // ── EDIT MODAL ──────────────────────────────────────────────────────────
+      function openEdit(email) {
+        const u = syncedUsers.find(x => x.email === email);
+        if (!u) return;
+        editingEmail = email;
+        document.getElementById('edit-modal-title').textContent = u.name || email;
+        document.getElementById('edit-user-email').value = email;
+        document.getElementById('edit-user-role').value = u.role || 'User';
+        document.getElementById('edit-user-script').value = u.scriptUrl || '';
+        document.getElementById('edit-user-password').value = '';
+        document.getElementById('edit-modal').classList.remove('hidden');
       }
 
-      window.apiCall = async function(endpoint, payload) {
-          if (!currentUserToken) return false;
-          try {
-             const res = await fetch(endpoint, {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify(payload)
-             });
-             if(!res.ok) throw new Error(await res.text());
-             return true;
-          } catch(e) {
-             alert(e.message);
-             return false;
-          }
-      };
-
-      window.apiDelete = async function(endpoint, payload) {
-          if (!currentUserToken) return false;
-          try {
-             const res = await fetch(endpoint, {
-                 method: 'DELETE',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify(payload)
-             });
-             if(!res.ok) throw new Error(await res.text());
-             return true;
-          } catch(e) {
-             alert(e.message);
-             return false;
-          }
+      function closeEdit() {
+        document.getElementById('edit-modal').classList.add('hidden');
+        editingEmail = null;
       }
 
-      window.toggleActive = async function(projectName, makeActive, e) {
-          e.stopPropagation();
-          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
-          await window.apiCall('/api/project/toggle-active', { projectName, isActive: makeActive });
-      }
+      document.getElementById('edit-modal-close').addEventListener('click', closeEdit);
+      document.getElementById('edit-modal-cancel').addEventListener('click', closeEdit);
+      document.getElementById('edit-modal-bg').addEventListener('click', closeEdit);
 
-      window.archiveProject = async function(projectName, e) {
-          e.stopPropagation();
-          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
-          if (activeProject === projectName) ui.sections.details.classList.add("hidden");
-          await window.apiCall('/api/project/archive', { projectName });
-      }
-
-      window.unarchiveProject = async function(projectName, e) {
-          e.stopPropagation();
-          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
-          await window.apiCall('/api/project/unarchive', { projectName });
-      }
-
-      window.openRenameModal = function(projectName, e) {
-          e.stopPropagation();
-          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
-          document.getElementById('rename-old-name').value = projectName;
-          document.getElementById('rename-new-name').value = projectName;
-          document.getElementById('rename-modal').classList.remove('hidden');
-      };
-
-      window.renameProject = async function() {
-          const oldName = document.getElementById('rename-old-name').value;
-          const newName = document.getElementById('rename-new-name').value.trim();
-          if (!newName || newName === oldName) { document.getElementById('rename-modal').classList.add('hidden'); return; }
-          const btn = document.getElementById('rename-confirm-btn');
-          btn.disabled = true; btn.textContent = 'Renaming...';
-          const ok = await window.apiCall('/api/project/rename', { oldName, newName, adminEmail: currentUserEmail });
-          btn.disabled = false; btn.textContent = 'Rename';
-          document.getElementById('rename-modal').classList.add('hidden');
-          if (ok) {
-             if (activeProject === oldName) { activeProject = newName; ui.item.title.textContent = newName; }
-             customAlert(`Project renamed from "${oldName}" to "${newName}" successfully!`, 'Renamed');
-          }
-      };
-
-      window.deleteProject = async function(projectName, e) {
-          e.stopPropagation();
-          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
-          if(confirm(`Are you absolutely sure you want to delete ${projectName} and all its items? This action cannot be undone.`)) {
-             if (activeProject === projectName) ui.sections.details.classList.add("hidden");
-             await window.apiDelete('/api/project/delete', { projectName });
-          }
-      }
-
-      // --- PROJECT LOAD FLOW ---
-      let unsubProjects = null;
-      let unsubUsers = null;
-      let unsubItems = null;
-
-      function buildSyncedData() {
-         syncedData = localProjects.map(p => {
-            return {
-               projectName: p.id,
-               isActive: p.isActive,
-               isArchived: p.isArchived,
-               items: allItems.filter(i => i.projectId === p.id)
-            };
-         });
-         
-         // Recover missing projects implicitly tracked by items
-         const trackedNames = new Set(localProjects.map(x => x.id));
-         const itemNames = new Set(allItems.map(x => x.projectId));
-         for (const name of itemNames) {
-            if (!trackedNames.has(name)) {
-                syncedData.push({
-                   projectName: name,
-                   isActive: true, // Legacy fallback
-                   isArchived: false,
-                   items: allItems.filter(i => i.projectId === name)
-                });
-            }
-         }
-
-         // Sort data alphabetically
-         syncedData.sort((a,b) => a.projectName.localeCompare(b.projectName));
-
-         renderProjects();
-         renderUsers(); 
-         populateAssignDropdowns();
-         if (activeProject) renderExistingItems(activeProject);
-      }
-
-      
-      function loadData() {
-        if (!currentUserToken) return;
-        ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to Firestore...</p>';
-
-        if (unsubUsers) unsubUsers();
-        if (unsubItems) unsubItems();
-
-        unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-           syncedUsers = snapshot.docs.map(doc => ({ email: doc.id, ...doc.data() }));
-           renderUsers();
-        });
-
-        // We load items implicitly so the user modal can compute "Assigned Items"
-        unsubItems = onSnapshot(collectionGroup(db, "items"), (snapshot) => {
-           allItems = snapshot.docs.map(doc => {
-              const pName = doc.ref.parent.parent.id;
-              return { projectId: pName, itemName: doc.data().name, ...doc.data() };
-           });
-           
-           // Mock syncedData for openUserModal function to iterate
-           // original openUserModal loop: syncedData.forEach(p => { p.items.forEach(...) })
-           syncedData = [{ projectName: "All Projects", items: allItems }];
-        });
-      }
-ui.proj.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
-        ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
-
-        if (unsubUsers) unsubUsers();
-        if (unsubProjects) unsubProjects();
-        if (unsubItems) unsubItems();
-
-        unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
-           syncedUsers = snapshot.docs.map(doc => ({ email: doc.id, ...doc.data() }));
-           buildSyncedData();
-        });
-
-        if (unsubNotifications) unsubNotifications();
-        unsubNotifications = onSnapshot(query(collection(db, "Notifications"), orderBy("createdAt", "desc")), (snapshot) => {
-           syncedNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-           const unread = syncedNotifications.filter(n => !n.isRead && n.userId === 'admin').length;
-           const badge = document.getElementById('alerts-badge');
-           if (unread > 0) {
-              badge.textContent = unread;
-              badge.classList.remove('hidden');
-           } else {
-              badge.classList.add('hidden');
-           }
-           if (currentTab === 'alerts') renderNotifications();
-        });
-
-
-        const qProjects = query(collection(db, "projects"), orderBy("createdAt", "desc"));
-        unsubProjects = onSnapshot(qProjects, (snapshot) => {
-           localProjects = snapshot.docs.map(doc => {
-              const data = doc.data();
-              return { 
-                 id: doc.id, 
-                 isActive: data.isActive === undefined ? true : data.isActive, 
-                 isArchived: data.isArchived === true 
-              };
-           });
-           buildSyncedData();
-        });
-
-        if (unsubNotifications) unsubNotifications();
-        unsubNotifications = onSnapshot(query(collection(db, "Notifications"), orderBy("createdAt", "desc")), (snapshot) => {
-           syncedNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-           const unread = syncedNotifications.filter(n => !n.isRead && n.userId === 'admin').length;
-           const badge = document.getElementById('alerts-badge');
-           if (unread > 0) {
-              badge.textContent = unread;
-              badge.classList.remove('hidden');
-           } else {
-              badge.classList.add('hidden');
-           }
-           if (currentTab === 'alerts') renderNotifications();
-        });
-
-
-        unsubItems = onSnapshot(collectionGroup(db, "items"), (snapshot) => {
-           allItems = snapshot.docs.map(doc => {
-              const pName = doc.ref.parent.parent.id;
-              return { projectId: pName, itemName: doc.data().name, ...doc.data() };
-           });
-           buildSyncedData();
-        });
-
-        if (unsubNotifications) unsubNotifications();
-        unsubNotifications = onSnapshot(query(collection(db, "Notifications"), orderBy("createdAt", "desc")), (snapshot) => {
-           syncedNotifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-           const unread = syncedNotifications.filter(n => !n.isRead && n.userId === 'admin').length;
-           const badge = document.getElementById('alerts-badge');
-           if (unread > 0) {
-              badge.textContent = unread;
-              badge.classList.remove('hidden');
-           } else {
-              badge.classList.add('hidden');
-           }
-           if (currentTab === 'alerts') renderNotifications();
-        });
-
-      }
-
-      ui.proj.refresh.addEventListener("click", () => {
-         loadData();
-      });
-
-      ui.proj.btn.addEventListener("click", async () => {
-        const name = ui.proj.name.value.trim();
-        if (!name || !currentUserToken) return;
-
-        ui.proj.btn.disabled = true;
-        ui.proj.btn.innerText = "Creating...";
+      document.getElementById('edit-modal-save').addEventListener('click', async () => {
+        const email = document.getElementById('edit-user-email').value;
+        const role = document.getElementById('edit-user-role').value;
+        const scriptUrl = document.getElementById('edit-user-script').value.trim();
+        const newPassword = document.getElementById('edit-user-password').value;
+        const btn = document.getElementById('edit-modal-save');
+        btn.disabled = true; btn.textContent = 'Saving...';
 
         try {
-          const res = await fetch("/api/project/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-            body: JSON.stringify({ projectName: name, initialItems: [] }) 
+          // Update profile
+          const pRes = await fetch('/api/users/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-dashboard-key': GATE_PASSWORD },
+            body: JSON.stringify({ email, role, scriptUrl })
           });
+          if (!pRes.ok) throw new Error(await pRes.text());
 
-          if (res.ok) {
-            ui.proj.name.value = "";
-            showMessage("Project created! Select it to add items.", true);
-          } else { throw new Error(await res.text()); }
-        } catch (e) { showMessage(e.message, false); }
-        finally { ui.proj.btn.disabled = false; ui.proj.btn.innerText = "Create Project"; }
-      });
-
-      
-      async function markRead(id) {
-         await db.collection('Notifications').doc(id).set({ isRead: true }, { merge: true });
-      }
-
-      function renderNotifications() {
-         const grid = document.getElementById('alerts-grid');
-         grid.innerHTML = "";
-         const adminNotifs = syncedNotifications.filter(n => n.userId === 'admin');
-         
-         if (adminNotifs.length === 0) {
-            document.getElementById('empty-alerts-msg').classList.remove('hidden');
-            return;
-         }
-         document.getElementById('empty-alerts-msg').classList.add('hidden');
-
-         adminNotifs.forEach(notif => {
-            const card = document.createElement("div");
-            card.className = `p-4 border rounded-lg shadow-sm ${notif.isRead ? 'bg-white border-slate-200' : 'bg-brand-50 border-brand-200'}`;
-            const dateStr = notif.createdAt ? new Date(notif.createdAt.seconds * 1000).toLocaleString() : 'Just now';
-            card.innerHTML = `
-              <div class="flex justify-between items-start">
-                 <div>
-                    <h4 class="font-bold text-slate-800 text-lg">${notif.title}</h4>
-                    <p class="text-slate-600 mt-1">${notif.message}</p>
-                    <p class="text-xs text-slate-400 mt-2">${dateStr}</p>
-                 </div>
-                 ${!notif.isRead ? `<button class="text-xs font-semibold text-brand-600 hover:text-brand-800" onclick="markRead('${notif.id}')">Mark Read</button>` : ''}
-              </div>
-            `;
-            grid.appendChild(card);
-         });
-      }
-
-      function renderProjects() {
-         ui.proj.grid.innerHTML = "";
-         const showArchived = (currentTab === 'archived');
-         
-         const filtered = syncedData.filter(p => showArchived ? p.isArchived : !p.isArchived);
-
-         if (filtered.length === 0) {
-            ui.proj.empty.classList.remove("hidden");
-            ui.proj.empty.textContent = showArchived ? "No archived projects exist yet." : "No active projects. Create one to begin.";
-            return;
-         }
-         ui.proj.empty.classList.add("hidden");
-         
-         filtered.forEach(p => {
-            const isInactive = !p.isActive;
-            const pName = p.projectName.replace(/'/g, "\\'");
-
-            // Status Badge
-            let badgeHTML = '';
-            if (p.isArchived) {
-                badgeHTML = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-semibold mr-2 border border-slate-200">Archived</span>`;
-            } else if (!p.isActive) {
-                badgeHTML = `<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-semibold mr-2 border border-orange-200">Inactive</span>`;
-            } else {
-                badgeHTML = `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold mr-2 border border-green-200">Active</span>`;
-            }
-
-            // Menu Items
-            let menuHTML = '';
-            if (p.isArchived) {
-                menuHTML = `<button onclick="unarchiveProject('${pName}', event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Unarchive</button>`;
-            } else {
-                menuHTML = `
-                   <button onclick="openRenameModal('${pName}', event)" class="block px-4 py-2 text-sm text-brand-600 w-full text-left hover:bg-brand-50 border-b border-slate-100 font-medium">Rename</button>
-                   <button onclick="toggleActive('${pName}', ${!p.isActive}, event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Set ${p.isActive ? 'Inactive' : 'Active'}</button>
-                   <button onclick="archiveProject('${pName}', event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Archive</button>
-                `;
-            }
-
-            const card = document.createElement("div");
-            card.className = `bg-white border p-4 sm:p-5 rounded-xl shadow-sm transition
-                             ${isInactive ? 'border-orange-100 opacity-90 hover:border-orange-200' : 'border-slate-200 hover:shadow-md hover:border-brand-300'} cursor-pointer group flex flex-col justify-between`;
-            
-            card.innerHTML = `
-              <div class="flex flex-col h-full">
-                 <div class="flex justify-between items-start mb-3">
-                    <div class="w-10 h-10 rounded-lg ${isInactive ? 'bg-orange-50 text-orange-600' : 'bg-brand-50 text-brand-600 group-hover:bg-brand-600 group-hover:text-white'} flex items-center justify-center font-bold text-lg transition">${pName.charAt(0).toUpperCase()}</div>
-                    
-                    <div class="relative">
-                       <button onclick="toggleDrop('${pName}', event)" class="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600">
-                          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"></path></svg>
-                       </button>
-                       <div id="drop-${pName}" class="dropdown-content absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg border border-slate-200 z-[60]">
-                          <div class="py-1">
-                             ${menuHTML}
-                             <button onclick="deleteProject('${pName}', event)" class="block px-4 py-2 text-sm text-red-600 w-full text-left hover:bg-red-50 font-medium">Delete</button>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-                 <div class="flex-1">
-                    <h3 class="font-bold text-slate-800 text-lg mb-1 truncate">${pName}</h3>
-                 </div>
-                 <div class="flex items-center justify-between mt-3 flex-wrap gap-2">
-                    ${badgeHTML}
-                    <p class="text-xs text-slate-500 font-medium">${p.items ? p.items.length : 0} items</p>
-                 </div>
-              </div>
-            `;
-            card.addEventListener("click", () => openProject(p.projectName));
-            ui.proj.grid.appendChild(card);
-         });
-      }
-
-      function renderUsers() {
-         ui.users.grid.innerHTML = "";
-         if (syncedUsers.length === 0) {
-            ui.users.empty.classList.remove("hidden");
-            ui.users.empty.textContent = "No users found.";
-            return;
-         }
-         ui.users.empty.classList.add("hidden");
-         
-         syncedUsers.forEach(user => {
-            const card = document.createElement("div");
-            card.className = "bg-white border border-slate-200 p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-md hover:border-brand-300 transition cursor-pointer group flex flex-col items-center text-center";
-            card.innerHTML = `
-              <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xl mb-3">${user.name ? user.name.charAt(0).toUpperCase() : '?'}</div>
-              <h3 class="font-bold text-slate-800 text-md truncate w-full">${user.name || 'Unknown'}</h3>
-              <p class="text-sm text-brand-600 font-medium">Balance: EGP ${user.balance || 0}</p>
-            `;
-            card.addEventListener("click", () => openUserModal(user));
-            ui.users.grid.appendChild(card);
-         });
-      }
-
-      function populateAssignDropdowns() {
-         const options = '<option value="">-- Unassigned --</option>' + 
-            syncedUsers.map(u => `<option value="${u.name}">${u.name}</option>`).join('');
-         ui.item.assign.innerHTML = options;
-         ui.editModal.assign.innerHTML = options;
-      }
-
-      function openUserModal(user) {
-         ui.userModal.title.textContent = user.name || 'Unknown';
-
-         document.getElementById('user-edit-email').value = user.email || '';
-         document.getElementById('user-edit-role').value = user.role || 'User';
-         document.getElementById('user-edit-script').value = user.scriptUrl || '';
-
-         ui.userModal.balance.textContent = `EGP ${user.balance || 0}`;
-         ui.userModal.items.innerHTML = "";
-
-         const assignedItems = [];
-         syncedData.forEach(p => {
-             if (p.items) {
-                 p.items.forEach(i => {
-                     if (i.assignedTo === user.name) {
-                         assignedItems.push({ project: p.projectName, item: i });
-                     }
-                 });
-             }
-         });
-
-         if (assignedItems.length === 0) {
-             ui.userModal.items.innerHTML = '<p class="text-slate-500 text-sm italic">No items assigned to this user.</p>';
-         } else {
-             assignedItems.forEach(ai => {
-                 const el = document.createElement("div");
-                 el.className = "p-3 border border-slate-200 rounded-lg bg-white shadow-sm flex flex-col mb-2";
-                 el.innerHTML = `
-                     <div class="flex justify-between items-start">
-                         <strong class="text-slate-800">${ai.item.itemName} <span class="text-slate-500 font-normal ml-1">x${ai.item.qty}</span></strong>
-                         <span class="text-xs font-medium bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">${ai.item.estPriceRange || '-'}</span>
-                     </div>
-                     <div class="text-xs text-brand-600 mt-1 font-semibold">Project: ${ai.project}</div>
-                     <div class="text-xs text-slate-500 mt-1 flex gap-2">
-                        <span class="px-1.5 py-0.5 rounded bg-slate-100">${ai.item.status}</span>
-                     </div>
-                 `;
-                 ui.userModal.items.appendChild(el);
-             });
-         }
-
-         
-         ui.userModal.el.classList.remove("hidden");
-      }
-
-      
-             alert("User updated successfully!");
-         } catch (e) {
-             alert("Failed to update user: " + e.message);
-         } finally {
-             btn.disabled = false;
-             btn.textContent = "Save User Settings";
-         }
-      });
-
-
-      ui.userModal.btnClose.addEventListener("click", () => ui.userModal.el.classList.add("hidden"));
-      ui.userModal.bg.addEventListener("click", () => ui.userModal.el.classList.add("hidden"));
-
-      function openProject(name) {
-         activeProject = name;
-         ui.item.title.textContent = activeProject;
-         ui.sections.details.classList.remove("hidden");
-         pendingItems = []; // reset queue on open
-         renderQueue();
-         renderExistingItems(name);
-         // scroll to it 
-         setTimeout(() => {
-            ui.sections.details.scrollIntoView({ behavior: 'smooth', block: 'center' });
-         }, 50);
-      }
-
-      function renderExistingItems(projectName) {
-         const listDiv = ui.item.existing;
-         const project = syncedData.find(p => p.projectName === projectName);
-         
-         if (!project || !project.items || project.items.length === 0) {
-            listDiv.innerHTML = '<p class="text-slate-500 text-sm italic">No items found in this project.</p>';
-            return;
-         }
-
-         listDiv.innerHTML = '';
-
-         let totalExpenses = 0;
-         project.items.forEach(item => {
-             if (item.itemName.startsWith('EXPENSE:')) {
-                 totalExpenses += (item.totalPrice || item.piecePrice || 0);
-             }
-         });
-         document.getElementById('detail-project-expenses').textContent = `EGP ${totalExpenses}`;
-
-         project.items.forEach(item => {
-             const itemRow = document.createElement("div");
-             const isBought = item.status === 'Bought';
-             const bgColor = isBought ? 'bg-green-50/50 border-green-200' : 'bg-white border-slate-200';
-             
-             itemRow.className = `flex justify-between items-center p-3 sm:p-4 border rounded-lg shadow-sm ${bgColor} hover:shadow-md transition`;
-             itemRow.innerHTML = `
-                <div class="flex-1 truncate pr-2">
-                   <strong class="text-slate-800 text-sm sm:text-base">${item.itemName}</strong> <span class="text-slate-500 text-sm ml-1 bg-white border border-slate-200 px-1 rounded">x${item.qty}</span>
-                   <div class="text-[11px] sm:text-xs text-slate-500 mt-2 flex items-center gap-2">
-                      <span class="px-2 py-0.5 rounded border border-slate-200 bg-white shadow-sm font-medium ${isBought ? 'text-green-700' : 'text-slate-600'}">${item.status}</span>
-                      <span>Assign To: <span class="text-brand-600 font-semibold">${item.assignedTo || 'Unassigned'}</span></span>
-                   </div>
-                </div>
-                <div class="flex flex-col items-end gap-2 ml-2">
-                   <div class="text-xs font-medium bg-white border border-slate-200 shadow-sm text-slate-700 px-2.5 py-1 rounded inline-block whitespace-nowrap">${item.estPriceRange || '-'}</div>
-                   <button class="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 bg-brand-50 rounded" onclick="openEditItemModal('${projectName.replace(/'/g, "\\'")}','${item.itemName.replace(/'/g, "\\'")}', ${item.qty}, '${item.estPriceRange.replace(/'/g, "\\'")}', '${(item.assignedTo || '').replace(/'/g, "\\'")}')">Edit</button>
-                </div>
-             `;
-             listDiv.appendChild(itemRow);
-         });
-      }
-
-      window.openEditItemModal = function(projectName, itemName, qty, priceFrom, priceTo, assignedTo) {
-          editingItemContext = { projectName, oldItemName: itemName };
-          ui.editModal.name.value = itemName;
-          ui.editModal.qty.value = qty;
-          ui.editModal.priceFrom.value = priceFrom || "";
-          ui.editModal.priceTo.value = priceTo || "";
-          ui.editModal.assign.value = assignedTo || "";
-          ui.editModal.image.value = ""; // Reset file input
-          
-          ui.editModal.el.classList.remove("hidden");
-      }
-
-      ui.editModal.btnCancel.addEventListener("click", () => {
-          ui.editModal.el.classList.add("hidden");
-          editingItemContext = null;
-      });
-      ui.editModal.bg.addEventListener("click", () => {
-          ui.editModal.el.classList.add("hidden");
-          editingItemContext = null;
-      });
-
-      ui.editModal.btnSave.addEventListener("click", async () => {
-          if (!editingItemContext) return;
-          
-          const newName = ui.editModal.name.value.trim();
-          const newQty = parseInt(ui.editModal.qty.value) || 1;
-          const newPriceFrom = ui.editModal.priceFrom.value.trim();
-          const newPriceTo = ui.editModal.priceTo.value.trim();
-          const newAssign = ui.editModal.assign.value;
-
-          if (!newName) {
-              alert("Item name is required.");
-              return;
-          }
-
-          ui.editModal.btnSave.disabled = true;
-          ui.editModal.btnSave.textContent = "Saving...";
-
-          let base64Image = "";
-          if (ui.editModal.image.files.length > 0) {
-              base64Image = await compressImage(ui.editModal.image.files[0]);
-          }
-
-          submitEdit(editingItemContext.projectName, editingItemContext.oldItemName, newName, newQty, newPriceFrom, newPriceTo, newAssign, base64Image);
-      });
-
-      async function submitEdit(projectName, oldItemName, newItemName, newQty, newPriceFrom, newPriceTo, assignedTo, base64Image) {
-         try {
-           ui.item.existing.innerHTML = '<p class="text-slate-500 text-sm italic">Saving changes to server...</p>';
-           
-           const estPriceRange = (newPriceFrom && newPriceTo) ? `EGP ${newPriceFrom} - EGP ${newPriceTo}` : '';
-           
-           const payload = { 
-               projectName, 
-               oldItemName, 
-               newItemName, 
-               qty: newQty, 
-               estPriceFrom: newPriceFrom,
-               estPriceTo: newPriceTo,
-               estPriceRange: estPriceRange, 
-               assignedTo 
-           };
-
-           if (base64Image) {
-               payload.referenceImageBase64 = base64Image.split(',')[1]; // Remove data:image... header
-           }
-
-           const res = await fetch("/api/project/edit-item", {
-             method: "POST",
-             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-             body: JSON.stringify(payload)
-           });
-           if (res.ok) {
-             ui.editModal.el.classList.add("hidden");
-           } else {
-             alert("Failed to update: " + await res.text());
-           }
-         } catch(e) { 
-            alert("Error: " + e.message); 
-            renderExistingItems(projectName);
-         } finally {
-            ui.editModal.btnSave.disabled = false;
-            ui.editModal.btnSave.textContent = "Save Changes";
-         }
-      }
-
-      ui.item.close.addEventListener("click", () => {
-         ui.sections.details.classList.add("hidden");
-         activeProject = null;
-         pendingItems = [];
-      });
-
-      // --- IMAGE COMPRESSION HELPER ---
-      function compressImage(file) {
-          return new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(file);
-              reader.onload = event => {
-                  const img = new Image();
-                  img.src = event.target.result;
-                  img.onload = () => {
-                      const canvas = document.createElement('canvas');
-                      let width = img.width;
-                      let height = img.height;
-                      const MAX_WIDTH = 800;
-                      const MAX_HEIGHT = 800;
-
-                      if (width > height) {
-                          if (width > MAX_WIDTH) {
-                              height *= MAX_WIDTH / width;
-                              width = MAX_WIDTH;
-                          }
-                      } else {
-                          if (height > MAX_HEIGHT) {
-                              width *= MAX_HEIGHT / height;
-                              height = MAX_HEIGHT;
-                          }
-                      }
-
-                      canvas.width = width;
-                      canvas.height = height;
-                      const ctx = canvas.getContext('2d');
-                      ctx.drawImage(img, 0, 0, width, height);
-                      
-                      // Compress as JPEG at 70% quality
-                      const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                      resolve(dataUrl);
-                  };
-                  img.onerror = error => reject(error);
-              };
-              reader.onerror = error => reject(error);
-          });
-      }
-
-      // --- QUEUE & BATCH LOGIC ---
-      ui.item.btnQueue.addEventListener("click", async () => {
-         const itemName = ui.item.name.value.trim();
-         const qty = parseInt(ui.item.qty.value) || 1;
-         const priceFrom = ui.item.priceFrom.value.trim();
-         const priceTo = ui.item.priceTo.value.trim();
-         const assignedTo = ui.item.assign.value;
-         
-         if (!itemName) return;
-
-         ui.item.btnQueue.disabled = true;
-         ui.item.btnQueue.textContent = "Wait...";
-
-         let base64Image = "";
-         if (ui.item.image.files.length > 0) {
-             try {
-                 base64Image = await compressImage(ui.item.image.files[0]);
-             } catch (e) {
-                 alert("Could not compress image.");
-             }
-         }
-
-         const estPriceString = (priceFrom && priceTo) ? `EGP ${priceFrom} - EGP ${priceTo}` : '';
-
-         pendingItems.push({ 
-             itemName, 
-             qty, 
-             estPriceFrom: priceFrom,
-             estPriceTo: priceTo,
-             estPriceRange: estPriceString, 
-             assignedTo, 
-             referenceImageBase64: base64Image ? base64Image.split(',')[1] : "", // Strip data:image prefix
-             id: Date.now() 
-         });
-         
-         ui.item.name.value = ""; ui.item.qty.value = "1"; ui.item.priceFrom.value = ""; ui.item.priceTo.value = ""; ui.item.assign.value = ""; ui.item.image.value = "";
-         ui.item.name.focus();
-         renderQueue();
-         
-         ui.item.btnQueue.disabled = false;
-         ui.item.btnQueue.textContent = "Queue Item";
-      });
-
-      function renderQueue() {
-         ui.item.count.textContent = pendingItems.length;
-         ui.item.btnSubmit.disabled = pendingItems.length === 0;
-         if(pendingItems.length > 0) {
-            ui.item.btnSubmit.classList.add('shadow-md');
-         } else {
-            ui.item.btnSubmit.classList.remove('shadow-md');
-         }
-         
-         const existingItems = ui.item.list.querySelectorAll('.queued-item');
-         existingItems.forEach(el => el.remove());
-
-         if (pendingItems.length === 0) {
-            ui.item.emptyQueue.classList.remove("hidden");
-            return;
-         }
-         ui.item.emptyQueue.classList.add("hidden");
-
-         pendingItems.forEach(item => {
-             const itemRow = document.createElement("div");
-             itemRow.className = "queued-item flex justify-between items-center p-3 bg-white border border-slate-200 rounded-md shadow-sm border-l-4 border-l-brand-500";
-             itemRow.innerHTML = `
-                <div class="flex-1 truncate pr-2">
-                   <span class="font-semibold text-slate-800">${item.itemName}</span> <span class="text-slate-500 text-sm ml-2 bg-slate-100 px-1 rounded border border-slate-200">x${item.qty}</span>
-                   <div class="text-xs text-slate-400 mt-1">Assigned: <span class="text-brand-600 font-semibold">${item.assignedTo || 'Unassigned'}</span></div>
-                </div>
-                <div class="flex items-center gap-3">
-                   <div class="text-xs font-medium bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-200 whitespace-nowrap">${item.estPriceRange || '-'}</div>
-                   <button class="p-1 bg-red-50 text-red-500 hover:text-red-700 hover:bg-red-100 rounded border border-red-100 transition" onclick="removeItem(${item.id})">
-                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                   </button>
-                </div>
-             `;
-             ui.item.list.appendChild(itemRow);
-         });
-      }
-
-      window.removeItem = function(id) {
-         pendingItems = pendingItems.filter(i => i.id !== id);
-         renderQueue();
-      }
-
-      ui.item.btnSubmit.addEventListener("click", async () => {
-         if (!activeProject || !currentUserToken || pendingItems.length === 0) return;
-
-         ui.item.btnSubmit.disabled = true;
-         ui.item.btnSubmit.innerText = "Submitting...";
-
-         try {
-           const itemsToSend = pendingItems.map(({ id, ...rest }) => rest);
-           const res = await fetch("/api/project/create", {
-             method: "POST",
-             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-             body: JSON.stringify({ projectName: activeProject, initialItems: itemsToSend })
-           });
-
-           if (res.ok) {
-             alert(`Successfully added ${pendingItems.length} items to ${activeProject}!`);
-             pendingItems = []; // clear queue
-             renderQueue();
-             loadData(); // Reload existing items
-           } else { throw new Error(await res.text()); }
-         } catch (e) { alert("Failed to submit batch: " + e.message); }
-         finally { ui.item.btnSubmit.innerText = "Submit Batch"; renderQueue(); }
-      });
-
-      function showMessage(msg, isSuccess) {
-         ui.proj.msg.textContent = msg;
-         ui.proj.msg.className = `text-sm font-medium text-center mt-3 bg-${isSuccess ? 'green' : 'red'}-50 text-${isSuccess ? 'green' : 'red'}-700 p-2 rounded`;
-         ui.proj.msg.classList.remove("hidden");
-         setTimeout(() => ui.proj.msg.classList.add("hidden"), 4000);
-      }
-    
-      // ADD USER LOGIC
-      document.getElementById('create-user-btn').addEventListener("click", async () => {
-         const name = document.getElementById("new-user-name").value.trim();
-         const email = document.getElementById("new-user-email").value.trim();
-         const pass = document.getElementById("new-user-password").value;
-         
-         if (!name || !email || !pass) return alert("Fill all fields");
-         
-         const btn = document.getElementById("create-user-btn");
-         btn.disabled = true; btn.textContent = "Creating...";
-
-         try {
-            const res = await fetch("/api/users/create", {
-               method: "POST",
-               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-               body: JSON.stringify({ name, email, password: pass })
+          // Change password if provided
+          if (newPassword) {
+            if (newPassword.length < 6) throw new Error('Password must be at least 6 characters.');
+            const pwRes = await fetch('/api/users/change-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-dashboard-key': GATE_PASSWORD },
+              body: JSON.stringify({ email, newPassword })
             });
+            if (!pwRes.ok) throw new Error(await pwRes.text());
+          }
 
-            if (res.ok) {
-               alert("Account successfully created!");
-               document.getElementById("new-user-name").value = "";
-               document.getElementById("new-user-email").value = "";
-               document.getElementById("new-user-password").value = "";
-               loadData();
-            } else {
-               throw new Error(await res.text());
-            }
-         } catch(e) { alert("Failed to create user: " + e.message); }
-         finally { btn.disabled = false; btn.textContent = "Create Account"; }
+          closeEdit();
+        } catch(e) {
+          alert('Error: ' + e.message);
+        } finally {
+          btn.disabled = false; btn.textContent = 'Save Changes';
+        }
       });
 
-      // CHANGE PASSWORD LOGIC
-      document.getElementById('user-update-password-btn').addEventListener('click', async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const newPass = document.getElementById('user-edit-new-password').value;
-         
-         if (!newPass || newPass.length < 6) return alert("Password must be at least 6 characters.");
-         
-         const btn = document.getElementById('user-update-password-btn');
-         const oldText = btn.textContent;
-         btn.disabled = true; btn.textContent = "Working...";
-
-         try {
-             const res = await fetch("/api/users/update-password", {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify({ email, newPassword: newPass })
-             });
-             
-             if (res.ok) {
-                 alert("Password updated successfully!");
-                 document.getElementById('user-edit-new-password').value = "";
-                 ui.userModal.el.classList.add("hidden");
-             } else {
-                 throw new Error(await res.text());
-             }
-         } catch (e) { alert("Failed to update password: " + e.message); }
-         finally { btn.disabled = false; btn.textContent = oldText; }
-      });
-      
-      // Hook up UI role edit
-      document.getElementById('user-save-btn').onclick = async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const role = document.getElementById('user-edit-role').value;
-         const scriptUrl = document.getElementById('user-edit-script').value.trim();
-         
-         const btn = document.getElementById('user-save-btn');
-         btn.disabled = true;
-         btn.textContent = "Saving...";
-
-         try {
-             const res = await fetch("/api/users/update-profile", {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
-                 body: JSON.stringify({ email, role, scriptUrl })
-             });
-             if (res.ok) {
-                 alert("User updated successfully!");
-                 ui.userModal.el.classList.add("hidden");
-             } else {
-                 throw new Error(await res.text());
-             }
-         } catch (e) {
-             alert("Failed to update user: " + e.message);
-         } finally {
-             btn.disabled = false;
-             btn.textContent = "Save User Settings";
-         }
-      };
-
-</script>
+      function showMsg(el, text, success) {
+        el.textContent = text;
+        el.className = `text-sm mt-1 ${success ? 'text-green-700' : 'text-red-600'}`;
+        el.classList.remove('hidden');
+        if (success) setTimeout(() => el.classList.add('hidden'), 8000);
+      }
+    </script>
   </body>
 </html>
