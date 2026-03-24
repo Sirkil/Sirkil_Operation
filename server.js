@@ -602,6 +602,90 @@ app.get('/api/proxy/get', verifyToken, async (req, res) => {
   }
 });
 
+// --- USER MANAGEMENT ENDPOINTS ---
+
+app.post('/api/users/create', verifyToken, async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).send('Missing fields');
+  try {
+    const callerEmail = req.user.email;
+    const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com", "omar@sirkil.com", "amr@sirkil.com", "farah.ashraf@sirkil.com"];
+    let isAdmin = authorizedAdmins.includes(callerEmail);
+    if (!isAdmin) {
+       const docSnap = await db.collection('users').doc(callerEmail).get();
+       if (docSnap.exists && docSnap.data().role === 'Admin') isAdmin = true;
+    }
+    if (!isAdmin) return res.status(403).send('Forbidden: Admins only');
+
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: name,
+    });
+
+    await db.collection('users').doc(email).set({
+      name,
+      email,
+      role: 'User',
+      balance: 0,
+      scriptUrl: '',
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.status(200).json({ status: 'success', uid: userRecord.uid });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/api/users/update-password', verifyToken, async (req, res) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) return res.status(400).send('Missing fields');
+  try {
+    const callerEmail = req.user.email;
+    const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com", "omar@sirkil.com", "amr@sirkil.com", "farah.ashraf@sirkil.com"];
+    let isAdmin = authorizedAdmins.includes(callerEmail);
+    if (!isAdmin) {
+       const docSnap = await db.collection('users').doc(callerEmail).get();
+       if (docSnap.exists && docSnap.data().role === 'Admin') isAdmin = true;
+    }
+    if (!isAdmin) return res.status(403).send('Forbidden: Admins only');
+
+    const userRecord = await admin.auth().getUserByEmail(email);
+    await admin.auth().updateUser(userRecord.uid, { password: newPassword });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error updating password:', error);
+    res.status(500).send(error.message);
+  }
+});
+
+app.post('/api/users/update-profile', verifyToken, async (req, res) => {
+  const { email, role, scriptUrl } = req.body;
+  if (!email) return res.status(400).send('Missing email');
+  try {
+    const callerEmail = req.user.email;
+    const authorizedAdmins = ["ahmed.tanany@sirkil.com", "admin@sirkil.com", "operations@sirkil.com", "omar@sirkil.com", "amr@sirkil.com", "farah.ashraf@sirkil.com"];
+    let isAdmin = authorizedAdmins.includes(callerEmail);
+    if (!isAdmin) {
+       const docSnap = await db.collection('users').doc(callerEmail).get();
+       if (docSnap.exists && docSnap.data().role === 'Admin') isAdmin = true;
+    }
+    if (!isAdmin) return res.status(403).send('Forbidden: Admins only');
+
+    await db.collection('users').doc(email).set({
+      role: role || 'User',
+      scriptUrl: scriptUrl || ''
+    }, { merge: true });
+
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).send(error.message);
+  }
+});
+
 // Fallback route for Flutter Web App (Single Page Application routing support)
 app.get(/^\/app.*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public/app', 'index.html'));

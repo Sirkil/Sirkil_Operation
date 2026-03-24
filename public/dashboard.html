@@ -3,10 +3,101 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sirkil Admin Dashboard</title>
+    <title>Sirkil User Management</title>
     <!-- Modern font (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+      // ADD USER LOGIC
+      document.getElementById('create-user-btn').addEventListener("click", async () => {
+         const name = document.getElementById("new-user-name").value.trim();
+         const email = document.getElementById("new-user-email").value.trim();
+         const pass = document.getElementById("new-user-password").value;
+         
+         if (!name || !email || !pass) return alert("Fill all fields");
+         
+         const btn = document.getElementById("create-user-btn");
+         btn.disabled = true; btn.textContent = "Creating...";
+
+         try {
+            const res = await fetch("/api/users/create", {
+               method: "POST",
+               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
+               body: JSON.stringify({ name, email, password: pass })
+            });
+
+            if (res.ok) {
+               alert("Account successfully created!");
+               document.getElementById("new-user-name").value = "";
+               document.getElementById("new-user-email").value = "";
+               document.getElementById("new-user-password").value = "";
+               loadData();
+            } else {
+               throw new Error(await res.text());
+            }
+         } catch(e) { alert("Failed to create user: " + e.message); }
+         finally { btn.disabled = false; btn.textContent = "Create Account"; }
+      });
+
+      // CHANGE PASSWORD LOGIC
+      document.getElementById('user-update-password-btn').addEventListener('click', async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const newPass = document.getElementById('user-edit-new-password').value;
+         
+         if (!newPass || newPass.length < 6) return alert("Password must be at least 6 characters.");
+         
+         const btn = document.getElementById('user-update-password-btn');
+         const oldText = btn.textContent;
+         btn.disabled = true; btn.textContent = "Working...";
+
+         try {
+             const res = await fetch("/api/users/update-password", {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
+                 body: JSON.stringify({ email, newPassword: newPass })
+             });
+             
+             if (res.ok) {
+                 alert("Password updated successfully!");
+                 document.getElementById('user-edit-new-password').value = "";
+                 ui.userModal.el.classList.add("hidden");
+             } else {
+                 throw new Error(await res.text());
+             }
+         } catch (e) { alert("Failed to update password: " + e.message); }
+         finally { btn.disabled = false; btn.textContent = oldText; }
+      });
+      
+      // Hook up UI role edit
+      document.getElementById('user-save-btn').onclick = async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const role = document.getElementById('user-edit-role').value;
+         const scriptUrl = document.getElementById('user-edit-script').value.trim();
+         
+         const btn = document.getElementById('user-save-btn');
+         btn.disabled = true;
+         btn.textContent = "Saving...";
+
+         try {
+             const res = await fetch("/api/users/update-profile", {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
+                 body: JSON.stringify({ email, role, scriptUrl })
+             });
+             if (res.ok) {
+                 alert("User updated successfully!");
+                 ui.userModal.el.classList.add("hidden");
+             } else {
+                 throw new Error(await res.text());
+             }
+         } catch (e) {
+             alert("Failed to update user: " + e.message);
+         } finally {
+             btn.disabled = false;
+             btn.textContent = "Save User Settings";
+         }
+      };
+
+</script>
     <script>
       tailwind.config = {
         theme: {
@@ -18,7 +109,98 @@
           }
         }
       }
-    </script>
+    
+      // ADD USER LOGIC
+      document.getElementById('create-user-btn').addEventListener("click", async () => {
+         const name = document.getElementById("new-user-name").value.trim();
+         const email = document.getElementById("new-user-email").value.trim();
+         const pass = document.getElementById("new-user-password").value;
+         
+         if (!name || !email || !pass) return alert("Fill all fields");
+         
+         const btn = document.getElementById("create-user-btn");
+         btn.disabled = true; btn.textContent = "Creating...";
+
+         try {
+            const res = await fetch("/api/users/create", {
+               method: "POST",
+               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
+               body: JSON.stringify({ name, email, password: pass })
+            });
+
+            if (res.ok) {
+               alert("Account successfully created!");
+               document.getElementById("new-user-name").value = "";
+               document.getElementById("new-user-email").value = "";
+               document.getElementById("new-user-password").value = "";
+               loadData();
+            } else {
+               throw new Error(await res.text());
+            }
+         } catch(e) { alert("Failed to create user: " + e.message); }
+         finally { btn.disabled = false; btn.textContent = "Create Account"; }
+      });
+
+      // CHANGE PASSWORD LOGIC
+      document.getElementById('user-update-password-btn').addEventListener('click', async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const newPass = document.getElementById('user-edit-new-password').value;
+         
+         if (!newPass || newPass.length < 6) return alert("Password must be at least 6 characters.");
+         
+         const btn = document.getElementById('user-update-password-btn');
+         const oldText = btn.textContent;
+         btn.disabled = true; btn.textContent = "Working...";
+
+         try {
+             const res = await fetch("/api/users/update-password", {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
+                 body: JSON.stringify({ email, newPassword: newPass })
+             });
+             
+             if (res.ok) {
+                 alert("Password updated successfully!");
+                 document.getElementById('user-edit-new-password').value = "";
+                 ui.userModal.el.classList.add("hidden");
+             } else {
+                 throw new Error(await res.text());
+             }
+         } catch (e) { alert("Failed to update password: " + e.message); }
+         finally { btn.disabled = false; btn.textContent = oldText; }
+      });
+      
+      // Hook up UI role edit
+      document.getElementById('user-save-btn').onclick = async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const role = document.getElementById('user-edit-role').value;
+         const scriptUrl = document.getElementById('user-edit-script').value.trim();
+         
+         const btn = document.getElementById('user-save-btn');
+         btn.disabled = true;
+         btn.textContent = "Saving...";
+
+         try {
+             const res = await fetch("/api/users/update-profile", {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
+                 body: JSON.stringify({ email, role, scriptUrl })
+             });
+             if (res.ok) {
+                 alert("User updated successfully!");
+                 ui.userModal.el.classList.add("hidden");
+             } else {
+                 throw new Error(await res.text());
+             }
+         } catch (e) {
+             alert("Failed to update user: " + e.message);
+         } finally {
+             btn.disabled = false;
+             btn.textContent = "Save User Settings";
+         }
+      };
+
+</script>
     <style>
       /* Dropdown Menu Animation */
       .dropdown-content { display: none; }
@@ -56,219 +238,50 @@
 
     <!-- MAIN DASHBOARD -->
     <div id="dashboard-section" class="hidden min-h-screen flex flex-col">
-      <!-- Top Nav -->
+            <!-- Top Nav -->
       <nav class="bg-white border-b border-slate-200 px-4 md:px-8 py-4 flex flex-col sm:flex-row justify-between items-center sm:sticky top-0 z-10 gap-4 sm:gap-0">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold">S</div>
-          <h1 class="text-xl font-bold text-slate-900">Operations Control</h1>
+          <div class="w-8 h-8 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold">U</div>
+          <h1 class="text-xl font-bold text-slate-900">User Management Portal</h1>
         </div>
         <div class="flex items-center gap-4">
-          <a href="/dashboard.html" class="text-sm font-medium text-brand-600 hover:text-brand-700 underline bg-brand-50 px-3 py-1 rounded-full border border-brand-200">User Setup</a>
-          <span class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Admin Role</span>
+          <a href="/" class="text-sm font-medium text-brand-600 hover:text-brand-700 underline bg-brand-50 px-3 py-1 rounded-full border border-brand-200">Operations Control</a>
           <button id="logout-btn" class="text-sm font-medium text-slate-600 hover:text-red-600 transition">Log Out</button>
         </div>
       </nav>
-
-      <div class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        <!-- Left Column: Controls -->
-        <div class="lg:col-span-1 space-y-6">
-          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900 mb-4">Create Project</h2>
-            <div class="space-y-3">
-              <input type="text" id="project-name" placeholder="Name (e.g. Office)" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
-              <button id="create-project-btn" class="w-full bg-slate-900 text-white font-medium p-3 rounded-lg hover:bg-slate-800 transition">Create Project</button>
-              <p id="action-msg" class="text-sm text-center hidden"></p>
+      <div class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <!-- Add User Form -->
+          <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Create New Account</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <input type="text" id="new-user-name" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Full Name">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input type="email" id="new-user-email" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="user@sirkil.com">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input type="password" id="new-user-password" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Min 6 chars">
+              </div>
+              <div>
+                <button id="create-user-btn" class="w-full bg-slate-900 text-white font-medium p-2.5 rounded hover:bg-slate-800 transition">Create Account</button>
+              </div>
             </div>
-          </div>
-          
-          <div class="bg-brand-50 p-6 rounded-xl border border-brand-100 hidden lg:block">
-             <h3 class="font-semibold text-brand-900 mb-2">How it works</h3>
-             <p class="text-sm text-brand-800">1. Create a Project.<br>2. Select it.<br>3. Queue multiple items.<br>4. Submit batch to Sync.</p>
-          </div>
-        </div>
-
-        <!-- Right Column: Projects & Items -->
-        <div class="lg:col-span-3">
-          <div class="flex flex-col sm:flex-row justify-between items-start mb-6 border-b border-slate-200 pb-2">
-             <div class="flex gap-6 w-full sm:w-auto overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <button id="tab-active" class="text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Projects</button>
-                <button id="tab-archived" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Archived</button>
-                <button id="tab-alerts" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap flex items-center gap-2 border-b border-transparent">Alerts <span id="alerts-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span></button>
-                
-             </div>
-             <button id="refresh-projects-btn" class="text-sm text-brand-600 font-medium hover:underline shrink-0 mt-2 sm:mt-0">Refresh List</button>
+            <p id="create-user-msg" class="text-sm mt-3 hidden"></p>
           </div>
 
-          <!-- Project Cards Grid -->
-          <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <p id="empty-projects-msg" class="text-slate-500 col-span-full">No projects currently tracked locally. Create one to begin.</p>
+          <!-- Users Grid -->
+          <div class="mb-4 flex justify-between items-center border-b border-slate-200 pb-2">
+             <h3 class="text-xl font-bold text-slate-800">Existing Users</h3>
           </div>
-
-          <!-- Users Grid (Hidden initially) -->
-          <div id="users-grid" class="hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
             <p id="empty-users-msg" class="text-slate-500 col-span-full">Loading users...</p>
           </div>
-
-          <!-- Alerts Grid (Hidden initially) -->
-          <div id="alerts-grid" class="hidden grid-cols-1 gap-4 mb-8">
-            <p id="empty-alerts-msg" class="text-slate-500 col-span-full">Loading alerts...</p>
-          </div>
-
-          <!-- Active Project Items (Hidden by default) -->
-          <div id="project-details-section" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8 shadow-lg z-20 relative">
-            <div class="bg-slate-50 border-b border-slate-200 p-4 sm:p-6 flex justify-between items-center">
-               <div>
-                  <h3 class="text-xl font-bold text-slate-900" id="detail-project-title">Project Name</h3>
-                  <p class="text-sm text-slate-500">Queue items below to add in batch.</p>
-               </div>
-               <div class="hidden sm:block text-right mr-4">
-                  <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Expenses</p>
-                  <p class="text-lg font-bold text-brand-600" id="detail-project-expenses">EGP 0</p>
-               </div>
-               <button id="close-details-btn" class="text-slate-400 hover:text-red-500 bg-white shadow-sm border border-slate-200 rounded-full p-2">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-               </button>
-            </div>
-            
-            <div class="p-4 sm:p-6">
-              <!-- Add Item Form -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6 items-end bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <div class="w-full xl:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Item Name</label>
-                  <input type="text" id="new-item-name" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g., Cement Bag">
-                </div>
-                <div class="w-full">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Qty</label>
-                  <input type="number" id="new-item-qty" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" value="1" min="1">
-                </div>
-                <div class="w-full">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est From</label>
-                  <input type="number" id="new-item-price-from" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="EGP 10">
-                </div>
-                <div class="w-full">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Est To</label>
-                  <input type="number" id="new-item-price-to" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" placeholder="EGP 20">
-                </div>
-                <div class="w-full xl:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ref Image</label>
-                  <input type="file" id="new-item-image" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white h-[42px]">
-                </div>
-                <div class="w-full xl:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Assign To</label>
-                  <select id="new-item-assign" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
-                     <option value="">-- Unassigned --</option>
-                  </select>
-                </div>
-                <div class="w-full">
-                  <button id="queue-item-btn" class="w-full bg-slate-200 text-slate-800 font-medium p-2.5 rounded hover:bg-slate-300 transition h-[42px] whitespace-nowrap">Queue Item</button>
-                </div>
-              </div>
-
-               <div class="flex justify-between items-center mb-3 border-t border-slate-100 pt-3">
-                  <h4 class="font-bold text-slate-700">Pending Items (<span id="pending-count">0</span>)</h4>
-                  <button id="submit-batch-btn" class="bg-brand-600 text-white font-medium p-2 px-4 rounded hover:bg-brand-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm border border-transparent" disabled>Submit Batch</button>
-               </div>
-
-              <!-- List of Queued Items -->
-              <div id="items-list" class="space-y-3 min-h-[50px]">
-                 <p id="empty-queue-msg" class="text-slate-500 text-sm py-4 italic text-center">No items queued. Add items above.</p>
-              </div>
-
-              <!-- Active Project Existing Items -->
-              <div class="mt-8 border-t border-slate-200 pt-6">
-                 <h4 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    Existing Items
-                 </h4>
-                 <div id="existing-items-list" class="space-y-3">
-                    <p class="text-slate-500 text-sm italic">Loading existing items...</p>
-                 </div>
-              </div>
-
-              <!-- Expenses List -->
-              <div class="mt-8 border-t border-red-200 pt-6">
-                 <h4 class="font-bold text-red-700 mb-3 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Expenses Filtered (No Conflict)
-                 </h4>
-                 <div id="expenses-items-list" class="space-y-3">
-                 </div>
-              </div>
-            </div>
-          </div>
-
-          
-
-        </div>
       </div>
-    </div>
-
-    <!-- Edit Item Modal -->
-    <div id="edit-item-modal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" id="edit-modal-bg"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Edit Item</h3>
-                <div class="mt-4 space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Item Name</label>
-                    <input type="text" id="edit-item-name" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
-                  </div>
-                  <div class="flex gap-4">
-                    <div class="w-1/3">
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Qty</label>
-                      <input type="number" id="edit-item-qty" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none" min="1">
-                    </div>
-                    <div class="w-1/3">
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Est From</label>
-                      <input type="number" id="edit-item-price-from" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                    <div class="w-1/3">
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Est To</label>
-                      <input type="number" id="edit-item-price-to" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
-                    </div>
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Reference Image</label>
-                    <input type="file" id="edit-item-image" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white">
-                  </div>
-                  <div class="flex gap-4">
-                     <div class="w-1/2">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                        <select id="edit-item-status" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
-                           <option value="Searching">Searching</option>
-                           <option value="Bought">Bought</option>
-                           <option value="collecting">collecting</option>
-                           <option value="in office">in office</option>
-                           <option value="Done">Done</option>
-                           <option value="Expenses">Expenses</option>
-                        </select>
-                     </div>
-                     <div class="w-1/2">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Assign To</label>
-                        <select id="edit-item-assign" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
-                           <option value="">-- Unassigned --</option>
-                        </select>
-                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-slate-200">
-            <button type="button" id="save-edit-btn" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-600 text-base font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:ml-3 sm:w-auto sm:text-sm">Save Changes</button>
-            <button type="button" id="cancel-edit-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- User Details Modal -->
+<!-- User Details Modal -->
     <div id="user-details-modal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="user-modal-title" role="dialog" aria-modal="true">
       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" id="user-modal-bg"></div>
@@ -307,7 +320,15 @@
                 <input type="hidden" id="user-edit-email" />
              </div>
 
-             <h4 class="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wider">Assigned Items</h4>
+             
+                <h4 class="font-bold text-slate-700 mt-6 mb-3 text-sm uppercase tracking-wider">Change Password</h4>
+                <div class="flex gap-4 items-end mb-4 border-b border-slate-100 pb-4">
+                   <div class="flex-1">
+                      <input type="password" id="user-edit-new-password" placeholder="New Password" class="w-full p-2 border border-slate-300 rounded outline-none text-sm" />
+                   </div>
+                   <button id="user-update-password-btn" class="bg-red-50 text-red-600 px-4 py-2 border border-red-200 rounded text-sm font-medium hover:bg-red-100 transition whitespace-nowrap">Update Password</button>
+                </div>
+<h4 class="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wider">Assigned Items</h4>
              <div id="user-assigned-items" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2">
                  <p class="text-slate-500 text-sm italic">Loading items...</p>
              </div>
@@ -393,7 +414,7 @@
         item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
         users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
         tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), alerts: document.getElementById("tab-alerts"), users: document.getElementById("tab-users") },
-        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn"), status: document.getElementById("edit-item-status") },
+        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn") },
         userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
       };
 
@@ -654,9 +675,32 @@
          if (activeProject) renderExistingItems(activeProject);
       }
 
+      
       function loadData() {
         if (!currentUserToken) return;
-        ui.proj.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
+        ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to Firestore...</p>';
+
+        if (unsubUsers) unsubUsers();
+        if (unsubItems) unsubItems();
+
+        unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+           syncedUsers = snapshot.docs.map(doc => ({ email: doc.id, ...doc.data() }));
+           renderUsers();
+        });
+
+        // We load items implicitly so the user modal can compute "Assigned Items"
+        unsubItems = onSnapshot(collectionGroup(db, "items"), (snapshot) => {
+           allItems = snapshot.docs.map(doc => {
+              const pName = doc.ref.parent.parent.id;
+              return { projectId: pName, itemName: doc.data().name, ...doc.data() };
+           });
+           
+           // Mock syncedData for openUserModal function to iterate
+           // original openUserModal loop: syncedData.forEach(p => { p.items.forEach(...) })
+           syncedData = [{ projectName: "All Projects", items: allItems }];
+        });
+      }
+ui.proj.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
         ui.users.grid.innerHTML = '<p class="text-slate-500 col-span-full">Connecting to real-time database...</p>';
 
         if (unsubUsers) unsubUsers();
@@ -943,20 +987,7 @@
          ui.userModal.el.classList.remove("hidden");
       }
 
-      document.getElementById('user-save-btn').addEventListener('click', async () => {
-         const email = document.getElementById('user-edit-email').value;
-         const role = document.getElementById('user-edit-role').value;
-         const scriptUrl = document.getElementById('user-edit-script').value.trim();
-         
-         const btn = document.getElementById('user-save-btn');
-         btn.disabled = true;
-         btn.textContent = "Saving...";
-
-         try {
-             await db.collection('users').doc(email).set({
-                 role: role,
-                 scriptUrl: scriptUrl
-             }, { merge: true });
+      
              alert("User updated successfully!");
          } catch (e) {
              alert("Failed to update user: " + e.message);
@@ -993,7 +1024,6 @@
          }
 
          listDiv.innerHTML = '';
-         document.getElementById('expenses-items-list').innerHTML = '';
 
          let totalExpenses = 0;
          project.items.forEach(item => {
@@ -1006,39 +1036,33 @@
          project.items.forEach(item => {
              const itemRow = document.createElement("div");
              const isBought = item.status === 'Bought';
-             const isExpense = item.status === 'Expenses' || item.itemName.startsWith('EXPENSE:');
-             const bgColor = isExpense ? 'bg-red-50/50 border-red-200' : (isBought ? 'bg-green-50/50 border-green-200' : 'bg-white border-slate-200');
+             const bgColor = isBought ? 'bg-green-50/50 border-green-200' : 'bg-white border-slate-200';
              
              itemRow.className = `flex justify-between items-center p-3 sm:p-4 border rounded-lg shadow-sm ${bgColor} hover:shadow-md transition`;
              itemRow.innerHTML = `
                 <div class="flex-1 truncate pr-2">
                    <strong class="text-slate-800 text-sm sm:text-base">${item.itemName}</strong> <span class="text-slate-500 text-sm ml-1 bg-white border border-slate-200 px-1 rounded">x${item.qty}</span>
                    <div class="text-[11px] sm:text-xs text-slate-500 mt-2 flex items-center gap-2">
-                      <span class="px-2 py-0.5 rounded border border-slate-200 bg-white shadow-sm font-medium ${isBought ? 'text-green-700' : (isExpense ? 'text-red-700' : 'text-slate-600')}">${item.status}</span>
+                      <span class="px-2 py-0.5 rounded border border-slate-200 bg-white shadow-sm font-medium ${isBought ? 'text-green-700' : 'text-slate-600'}">${item.status}</span>
                       <span>Assign To: <span class="text-brand-600 font-semibold">${item.assignedTo || 'Unassigned'}</span></span>
                    </div>
                 </div>
                 <div class="flex flex-col items-end gap-2 ml-2">
                    <div class="text-xs font-medium bg-white border border-slate-200 shadow-sm text-slate-700 px-2.5 py-1 rounded inline-block whitespace-nowrap">${item.estPriceRange || '-'}</div>
-                   <button class="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 bg-brand-50 rounded" onclick="openEditItemModal('${projectName.replace(/'/g, "\\'")}','${item.itemName.replace(/'/g, "\\'")}', ${item.qty}, '${item.estPriceRange.replace(/'/g, "\\'")}', '${(item.assignedTo || '').replace(/'/g, "\\'")}', '${(item.status || 'Searching').replace(/'/g, "\\'")}')">Edit</button>
+                   <button class="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 bg-brand-50 rounded" onclick="openEditItemModal('${projectName.replace(/'/g, "\\'")}','${item.itemName.replace(/'/g, "\\'")}', ${item.qty}, '${item.estPriceRange.replace(/'/g, "\\'")}', '${(item.assignedTo || '').replace(/'/g, "\\'")}')">Edit</button>
                 </div>
              `;
-             if (isExpense) {
-                document.getElementById('expenses-items-list').appendChild(itemRow);
-             } else {
-                listDiv.appendChild(itemRow);
-             }
+             listDiv.appendChild(itemRow);
          });
       }
 
-      window.openEditItemModal = function(projectName, itemName, qty, priceFrom, priceTo, assignedTo, status) {
+      window.openEditItemModal = function(projectName, itemName, qty, priceFrom, priceTo, assignedTo) {
           editingItemContext = { projectName, oldItemName: itemName };
           ui.editModal.name.value = itemName;
           ui.editModal.qty.value = qty;
           ui.editModal.priceFrom.value = priceFrom || "";
           ui.editModal.priceTo.value = priceTo || "";
           ui.editModal.assign.value = assignedTo || "";
-          if(ui.editModal.status) ui.editModal.status.value = status || "Searching";
           ui.editModal.image.value = ""; // Reset file input
           
           ui.editModal.el.classList.remove("hidden");
@@ -1061,7 +1085,6 @@
           const newPriceFrom = ui.editModal.priceFrom.value.trim();
           const newPriceTo = ui.editModal.priceTo.value.trim();
           const newAssign = ui.editModal.assign.value;
-          const newStatus = ui.editModal.status ? ui.editModal.status.value : "Searching";
 
           if (!newName) {
               alert("Item name is required.");
@@ -1076,10 +1099,10 @@
               base64Image = await compressImage(ui.editModal.image.files[0]);
           }
 
-          submitEdit(editingItemContext.projectName, editingItemContext.oldItemName, newName, newQty, newPriceFrom, newPriceTo, newAssign, base64Image, newStatus);
+          submitEdit(editingItemContext.projectName, editingItemContext.oldItemName, newName, newQty, newPriceFrom, newPriceTo, newAssign, base64Image);
       });
 
-      async function submitEdit(projectName, oldItemName, newItemName, newQty, newPriceFrom, newPriceTo, assignedTo, base64Image, status) {
+      async function submitEdit(projectName, oldItemName, newItemName, newQty, newPriceFrom, newPriceTo, assignedTo, base64Image) {
          try {
            ui.item.existing.innerHTML = '<p class="text-slate-500 text-sm italic">Saving changes to server...</p>';
            
@@ -1093,8 +1116,7 @@
                estPriceFrom: newPriceFrom,
                estPriceTo: newPriceTo,
                estPriceRange: estPriceRange, 
-               assignedTo,
-               status
+               assignedTo 
            };
 
            if (base64Image) {
@@ -1283,6 +1305,97 @@
          ui.proj.msg.classList.remove("hidden");
          setTimeout(() => ui.proj.msg.classList.add("hidden"), 4000);
       }
-    </script>
+    
+      // ADD USER LOGIC
+      document.getElementById('create-user-btn').addEventListener("click", async () => {
+         const name = document.getElementById("new-user-name").value.trim();
+         const email = document.getElementById("new-user-email").value.trim();
+         const pass = document.getElementById("new-user-password").value;
+         
+         if (!name || !email || !pass) return alert("Fill all fields");
+         
+         const btn = document.getElementById("create-user-btn");
+         btn.disabled = true; btn.textContent = "Creating...";
+
+         try {
+            const res = await fetch("/api/users/create", {
+               method: "POST",
+               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
+               body: JSON.stringify({ name, email, password: pass })
+            });
+
+            if (res.ok) {
+               alert("Account successfully created!");
+               document.getElementById("new-user-name").value = "";
+               document.getElementById("new-user-email").value = "";
+               document.getElementById("new-user-password").value = "";
+               loadData();
+            } else {
+               throw new Error(await res.text());
+            }
+         } catch(e) { alert("Failed to create user: " + e.message); }
+         finally { btn.disabled = false; btn.textContent = "Create Account"; }
+      });
+
+      // CHANGE PASSWORD LOGIC
+      document.getElementById('user-update-password-btn').addEventListener('click', async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const newPass = document.getElementById('user-edit-new-password').value;
+         
+         if (!newPass || newPass.length < 6) return alert("Password must be at least 6 characters.");
+         
+         const btn = document.getElementById('user-update-password-btn');
+         const oldText = btn.textContent;
+         btn.disabled = true; btn.textContent = "Working...";
+
+         try {
+             const res = await fetch("/api/users/update-password", {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
+                 body: JSON.stringify({ email, newPassword: newPass })
+             });
+             
+             if (res.ok) {
+                 alert("Password updated successfully!");
+                 document.getElementById('user-edit-new-password').value = "";
+                 ui.userModal.el.classList.add("hidden");
+             } else {
+                 throw new Error(await res.text());
+             }
+         } catch (e) { alert("Failed to update password: " + e.message); }
+         finally { btn.disabled = false; btn.textContent = oldText; }
+      });
+      
+      // Hook up UI role edit
+      document.getElementById('user-save-btn').onclick = async () => {
+         const email = document.getElementById('user-edit-email').value;
+         const role = document.getElementById('user-edit-role').value;
+         const scriptUrl = document.getElementById('user-edit-script').value.trim();
+         
+         const btn = document.getElementById('user-save-btn');
+         btn.disabled = true;
+         btn.textContent = "Saving...";
+
+         try {
+             const res = await fetch("/api/users/update-profile", {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUserToken}` },
+                 body: JSON.stringify({ email, role, scriptUrl })
+             });
+             if (res.ok) {
+                 alert("User updated successfully!");
+                 ui.userModal.el.classList.add("hidden");
+             } else {
+                 throw new Error(await res.text());
+             }
+         } catch (e) {
+             alert("Failed to update user: " + e.message);
+         } finally {
+             btn.disabled = false;
+             btn.textContent = "Save User Settings";
+         }
+      };
+
+</script>
   </body>
 </html>
