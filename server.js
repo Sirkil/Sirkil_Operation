@@ -271,6 +271,36 @@ app.post('/api/project/log-purchase', verifyToken, async (req, res) => {
   }
 });
 
+// Endpoint to update stock sheet when item status → 'On Stock'
+app.post('/api/project/update-stock', verifyToken, async (req, res) => {
+  const { projectName, itemName, qty, assignedTo } = req.body;
+
+  if (!projectName || !itemName) {
+    return res.status(400).json({ error: 'Missing projectName or itemName' });
+  }
+
+  try {
+    const masterScriptUrl = process.env.MASTER_SCRIPT_URL || APPS_SCRIPT_URL;
+    const payload = {
+      action: 'UPDATE_STOCK',
+      projectName,
+      itemName,
+      qty: qty || 1,
+      assignedTo: assignedTo || '',
+    };
+
+    const response = await axios.post(masterScriptUrl, payload, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 30000,
+    });
+
+    res.status(200).json({ status: 'success', data: response.data });
+  } catch (error) {
+    console.error('Error updating stock:', error.message);
+    res.status(500).json({ error: 'Failed to update stock', details: error.message });
+  }
+});
+
 // Endpoint to log "Add Money" Top-Ups
 app.post('/api/add-money', verifyToken, async (req, res) => {
   try {
