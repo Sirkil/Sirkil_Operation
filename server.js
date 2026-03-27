@@ -58,7 +58,19 @@ async function updateFirestoreItem(projectName, oldItemName, updates) {
 
     const batch = db.batch();
     snapshot.forEach(doc => {
-      batch.update(doc.ref, updates);
+      // If we are renaming the item, recreate it under the new doc ID
+      if (updates.name && updates.name !== oldItemName) {
+         const targetId = updates.name.replace(/\//g, '-');
+         if (doc.id !== targetId) {
+            const newDocRef = itemsRef.doc(targetId);
+            batch.set(newDocRef, { ...doc.data(), ...updates });
+            batch.delete(doc.ref);
+         } else {
+            batch.update(doc.ref, updates);
+         }
+      } else {
+         batch.update(doc.ref, updates);
+      }
     });
     await batch.commit();
   } catch(e) { console.error('Firestore Update Error:', e); }
@@ -97,7 +109,7 @@ app.post('/api/purchase', verifyToken, async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 app.post('/api/project/create', verifyToken, async (req, res) => {
   try {
-    const { projectName, initialItems, preserveActive } = req.body;
+    const { projectName, initialItems, preserveActive, eventDate } = req.body;
     const adminEmail = req.user.email;
 
     const authorizedAdmins = ['ahmed.tanany@sirkil.com', 'admin@sirkil.com', 'operations@sirkil.com', 'omar@sirkil.com', 'amr@sirkil.com', "farah.ashraf@sirkil.com"];
@@ -139,6 +151,7 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
         name: projectName,
         isActive: isActiveValue,
         isArchived: false,
+        eventDate: eventDate || '',
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       }, { merge: true }); // Use merge so we don't wipe existing data
 
@@ -155,8 +168,8 @@ app.post('/api/project/create', verifyToken, async (req, res) => {
             estPriceTo: parseFloat(item.estPriceTo) || 0,
             referenceImageBase64: item.referenceImageBase64 || '',
             status: 'Searching',
-            // Change 7/extra req: if admin pre-assigns item, set it so user sees in Assigned tab
             assignedTo: item.assignedTo || '',
+            dueDate: item.dueDate || '',
             piecePrice: 0,
             totalPrice: 0
           });
@@ -191,13 +204,14 @@ app.post('/api/project/edit-item', verifyToken, async (req, res) => {
 
     // Dual-write to Firestore
     if (!req.body.skipFirestore) {
-      const { projectName, oldItemName, newItemName, qty, estPriceRange, assignedTo, status } = req.body;
+      const { projectName, oldItemName, newItemName, qty, estPriceRange, assignedTo, status, dueDate } = req.body;
       let updates = {};
       if (newItemName !== undefined) updates.name = newItemName;
       if (qty !== undefined) updates.qty = parseInt(qty);
       if (estPriceRange !== undefined) updates.estPriceRange = estPriceRange;
       if (assignedTo !== undefined) updates.assignedTo = assignedTo;
       if (status !== undefined) updates.status = status;
+      if (dueDate !== undefined) updates.dueDate = dueDate;
       
       if (Object.keys(updates).length > 0) {
         await updateFirestoreItem(projectName, oldItemName || req.body.itemName, updates);
@@ -282,11 +296,12 @@ app.post('/api/project/update-stock', verifyToken, async (req, res) => {
   try {
     const masterScriptUrl = process.env.MASTER_SCRIPT_URL || APPS_SCRIPT_URL;
     const payload = {
-      action: 'UPDATE_STOCK',
+      action: 'editItem',
       projectName,
       itemName,
       qty: qty || 1,
       assignedTo: assignedTo || '',
+      status: 'On Stock'
     };
 
     const response = await axios.post(masterScriptUrl, payload, {
@@ -501,6 +516,21 @@ app.post('/api/project/rename', verifyToken, async (req, res) => {
   }
 });
 
+// Endpoint: Edit project event date
+app.post('/api/project/edit-date', verifyToken, async (req, res) => {
+  try {
+    const { projectName, eventDate } = req.body;
+    if (!projectName) return res.status(400).send('Missing projectName');
+
+    await db.collection('projects').doc(projectName).set({ eventDate: eventDate || '' }, { merge: true });
+
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Error editing event date:', error);
+    res.status(500).json({ error: 'Failed to edit event date' });
+  }
+});
+
 // Endpoint: Log a Deposit
 app.post('/api/project/log-deposit', verifyToken, async (req, res) => {
   try {
@@ -555,7 +585,7 @@ app.post('/api/project/log-expense', verifyToken, async (req, res) => {
           estPriceFrom: 0,
           estPriceTo: 0,
           referenceImageBase64: '',
-          status: 'Bought',
+          status: 'Expenses',
           assignedTo: displayName, // Store display name, not email
           piecePrice: parseFloat(payload.amount),
           totalPrice: parseFloat(payload.amount)

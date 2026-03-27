@@ -77,6 +77,10 @@
             <h2 class="text-lg font-bold text-slate-900 mb-4">Create Project</h2>
             <div class="space-y-3">
               <input type="text" id="project-name" placeholder="Name (e.g. Office)" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Event Date</label>
+                <input type="date" id="project-event-date" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 outline-none" />
+              </div>
               <button id="create-project-btn" class="w-full bg-slate-900 text-white font-medium p-3 rounded-lg hover:bg-slate-800 transition">Create Project</button>
               <p id="action-msg" class="text-sm text-center hidden"></p>
             </div>
@@ -94,6 +98,7 @@
              <div class="flex gap-6 w-full sm:w-auto overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <button id="tab-active" class="text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Projects</button>
                 <button id="tab-archived" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Archived</button>
+                <button id="tab-users" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b border-transparent">Users</button>
                 <button id="tab-alerts" class="text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap flex items-center gap-2 border-b border-transparent">Alerts <span id="alerts-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span></button>
                 
              </div>
@@ -160,11 +165,15 @@
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Ref Image</label>
                   <input type="file" id="new-item-image" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white h-[42px]">
                 </div>
-                <div class="w-full xl:col-span-2">
+                <div class="w-full">
                   <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Assign To</label>
                   <select id="new-item-assign" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
                      <option value="">-- Unassigned --</option>
                   </select>
+                </div>
+                <div class="w-full">
+                  <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Due Date</label>
+                  <input type="date" id="new-item-due-date" class="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none h-[42px]">
                 </div>
                 <div class="w-full">
                   <button id="queue-item-btn" class="w-full bg-slate-200 text-slate-800 font-medium p-2.5 rounded hover:bg-slate-300 transition h-[42px] whitespace-nowrap">Queue Item</button>
@@ -244,7 +253,7 @@
                     <input type="file" id="edit-item-image" accept="image/*" class="w-full p-1.5 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none text-sm bg-white">
                   </div>
                   <div class="flex gap-4">
-                     <div class="w-1/2">
+                     <div class="w-1/3">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
                         <select id="edit-item-status" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
                            <option value="Searching">Searching</option>
@@ -255,11 +264,15 @@
                            <option value="Expenses">Expenses</option>
                         </select>
                      </div>
-                     <div class="w-1/2">
+                     <div class="w-1/3">
                         <label class="block text-sm font-medium text-slate-700 mb-1">Assign To</label>
                         <select id="edit-item-assign" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none bg-white">
                            <option value="">-- Unassigned --</option>
                         </select>
+                     </div>
+                     <div class="w-1/3">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
+                        <input type="date" id="edit-item-due-date" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-brand-500 outline-none">
                      </div>
                   </div>
                 </div>
@@ -346,6 +359,29 @@
       </div>
     </div>
 
+    <!-- Set Event Date Modal -->
+    <div id="event-date-modal" class="hidden fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 backdrop-blur-sm" onclick="document.getElementById('event-date-modal').classList.add('hidden')"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm border border-slate-100 z-10">
+          <div class="px-6 py-5 border-b border-slate-100">
+            <h3 class="text-lg font-bold text-slate-900">Set Event Date</h3>
+          </div>
+          <div class="px-6 py-4 space-y-3">
+            <input type="hidden" id="event-date-project" />
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Event Date</label>
+              <input type="date" id="event-date-input" class="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
+            </div>
+          </div>
+          <div class="px-6 py-4 bg-slate-50 rounded-b-xl flex gap-3 justify-end border-t border-slate-100">
+            <button onclick="document.getElementById('event-date-modal').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Cancel</button>
+            <button id="event-date-confirm-btn" onclick="updateEventDate()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 transition">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Notification/Alert Modal -->
 
     <div id="alert-modal" class="hidden fixed inset-0 z-[120] overflow-y-auto" aria-labelledby="alert-modal-title" role="dialog" aria-modal="true">
@@ -375,7 +411,7 @@
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
       import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-      import { getFirestore, collection, collectionGroup, onSnapshot, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+      import { getFirestore, collection, collectionGroup, onSnapshot, query, orderBy, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
       
       const firebaseConfig = {
         apiKey: "AIzaSyDvGSwwc5-oY49AdPT_G4a_5NmmSnsmbyU",
@@ -396,10 +432,10 @@
         sections: { auth: document.getElementById("auth-section"), dash: document.getElementById("dashboard-section"), details: document.getElementById("project-details-section") },
         auth: { email: document.getElementById("email"), pass: document.getElementById("password"), btn: document.getElementById("login-btn"), err: document.getElementById("auth-error"), out: document.getElementById("logout-btn") },
         proj: { name: document.getElementById("project-name"), btn: document.getElementById("create-project-btn"), msg: document.getElementById("action-msg"), grid: document.getElementById("projects-grid"), empty: document.getElementById("empty-projects-msg"), refresh: document.getElementById("refresh-projects-btn") },
-        item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
+        item: { name: document.getElementById("new-item-name"), qty: document.getElementById("new-item-qty"), priceFrom: document.getElementById("new-item-price-from"), priceTo: document.getElementById("new-item-price-to"), image: document.getElementById("new-item-image"), assign: document.getElementById("new-item-assign"), dueDate: document.getElementById("new-item-due-date"), btnQueue: document.getElementById("queue-item-btn"), btnSubmit: document.getElementById("submit-batch-btn"), list: document.getElementById("items-list"), title: document.getElementById("detail-project-title"), close: document.getElementById("close-details-btn"), emptyQueue: document.getElementById("empty-queue-msg"), count: document.getElementById("pending-count"), existing: document.getElementById("existing-items-list") },
         users: { grid: document.getElementById("users-grid"), empty: document.getElementById("empty-users-msg") },
-        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), alerts: document.getElementById("tab-alerts") },
-        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn"), status: document.getElementById("edit-item-status") },
+        tabs: { active: document.getElementById("tab-active"), archived: document.getElementById("tab-archived"), users: document.getElementById("tab-users"), alerts: document.getElementById("tab-alerts") },
+        editModal: { el: document.getElementById("edit-item-modal"), bg: document.getElementById("edit-modal-bg"), title: document.getElementById("modal-title"), name: document.getElementById("edit-item-name"), qty: document.getElementById("edit-item-qty"), priceFrom: document.getElementById("edit-item-price-from"), priceTo: document.getElementById("edit-item-price-to"), image: document.getElementById("edit-item-image"), assign: document.getElementById("edit-item-assign"), btnSave: document.getElementById("save-edit-btn"), btnCancel: document.getElementById("cancel-edit-btn"), status: document.getElementById("edit-item-status"), dueDate: document.getElementById("edit-item-due-date") },
         userModal: { el: document.getElementById("user-details-modal"), bg: document.getElementById("user-modal-bg"), title: document.getElementById("user-modal-title"), balance: document.getElementById("user-modal-balance"), btnClose: document.getElementById("close-user-modal-btn"), items: document.getElementById("user-assigned-items") }
       };
 
@@ -452,32 +488,25 @@
 
       function switchTab(tabId) {
          currentTab = tabId;
-         ['active', 'archived', 'alerts'].forEach(t => {
-            ui.tabs[t].className = "text-xl font-bold pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b-2 " + (t === tabId ? "text-brand-600 border-brand-600" : "text-slate-400 border-transparent hover:text-slate-600");
+         ['active', 'archived', 'users', 'alerts'].forEach(t => {
+            const extraClass = t === 'alerts' ? ' flex items-center gap-2' : '';
+            ui.tabs[t].className = "text-xl font-bold pb-2 -mb-[9px] cursor-pointer whitespace-nowrap border-b-2 " + (t === tabId ? "text-brand-600 border-brand-600" : "text-slate-400 border-transparent hover:text-slate-600") + extraClass;
          });
          ui.sections.details.classList.add("hidden");
          
          document.getElementById('projects-grid').style.display = ['active','archived'].includes(tabId) ? '' : 'none';
+         document.getElementById('users-grid').style.display = tabId === 'users' ? 'grid' : 'none';
          document.getElementById('alerts-grid').style.display = tabId === 'alerts' ? 'grid' : 'none';
 
          if (['active','archived'].includes(tabId)) renderProjects();
+         if (tabId === 'users') renderUsers();
          if (tabId === 'alerts') renderNotifications();
       }
 
       ui.tabs.active.addEventListener('click', () => switchTab('active'));
       ui.tabs.archived.addEventListener('click', () => switchTab('archived'));
+      ui.tabs.users.addEventListener('click', () => switchTab('users'));
       ui.tabs.alerts.addEventListener('click', () => switchTab('alerts'));
-/*
-         currentTab = 'active';
-         ui.tabs.active.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         ui.tabs.archived.className = "text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         */
-
-      /* 
-         currentTab = 'archived';
-         ui.tabs.archived.className = "text-xl font-bold text-brand-600 border-b-2 border-brand-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         ui.tabs.active.className = "text-xl font-bold text-slate-400 hover:text-slate-600 pb-2 -mb-[9px] cursor-pointer whitespace-nowrap";
-         */
 
       // --- AUTH FLOW ---
       onAuthStateChanged(auth, async (user) => {
@@ -605,6 +634,33 @@
           }
       };
 
+      window.openEventDateModal = function(projectName, e) {
+          e.stopPropagation();
+          document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
+          document.getElementById('event-date-project').value = projectName;
+          
+          const p = syncedData.find(x => x.projectName === projectName);
+          document.getElementById('event-date-input').value = p && p.eventDate ? p.eventDate : '';
+          
+          document.getElementById('event-date-modal').classList.remove('hidden');
+      };
+
+      window.updateEventDate = async function() {
+          const projectName = document.getElementById('event-date-project').value;
+          const eventDate = document.getElementById('event-date-input').value;
+          const btn = document.getElementById('event-date-confirm-btn');
+          
+          btn.disabled = true; btn.textContent = 'Saving...';
+          const ok = await window.apiCall('/api/project/edit-date', { projectName, eventDate });
+          btn.disabled = false; btn.textContent = 'Save';
+          
+          if (ok) {
+             document.getElementById('event-date-modal').classList.add('hidden');
+             customAlert(`Event date updated successfully!`, 'Success');
+             loadData();
+          }
+      };
+
       window.deleteProject = async function(projectName, e) {
           e.stopPropagation();
           document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
@@ -625,6 +681,7 @@
                projectName: p.id,
                isActive: p.isActive,
                isArchived: p.isArchived,
+               eventDate: p.eventDate || '',
                items: allItems.filter(i => i.projectId === p.id)
             };
          });
@@ -697,7 +754,8 @@
         unsubItems = onSnapshot(collectionGroup(db, "items"), (snapshot) => {
            allItems = snapshot.docs.map(doc => {
               const pName = doc.ref.parent.parent.id;
-              return { projectId: pName, itemName: doc.data().name, ...doc.data() };
+              const d = doc.data();
+               return { projectId: pName, itemName: d.name, dueDate: d.dueDate || '', ...d };
            });
            buildSyncedData();
         });
@@ -719,7 +777,7 @@
           const res = await fetch("/api/project/create", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${currentUserToken}` },
-            body: JSON.stringify({ projectName: name, initialItems: [] }) 
+            body: JSON.stringify({ projectName: name, initialItems: [], eventDate: document.getElementById('project-event-date').value || '' }) 
           });
 
           if (res.ok) {
@@ -727,24 +785,26 @@
             showMessage("Project created! Select it to add items.", true);
           } else { throw new Error(await res.text()); }
         } catch (e) { showMessage(e.message, false); }
-        finally { ui.proj.btn.disabled = false; ui.proj.btn.innerText = "Create Project"; }
+        finally { ui.proj.btn.disabled = false; ui.proj.btn.innerText = "Create Project"; document.getElementById('project-event-date').value = ''; }
       });
 
       
       async function markRead(id) {
-         await db.collection('Notifications').doc(id).set({ isRead: true }, { merge: true });
+         try {
+            await updateDoc(doc(db, 'Notifications', id), { isRead: true });
+         } catch(e) { console.error('markRead error:', e); }
       }
 
       function renderNotifications() {
          const grid = document.getElementById('alerts-grid');
-         grid.innerHTML = "";
          const adminNotifs = syncedNotifications.filter(n => n.userId === 'admin');
          
          if (adminNotifs.length === 0) {
-            document.getElementById('empty-alerts-msg').classList.remove('hidden');
+            grid.innerHTML = '<p id="empty-alerts-msg" class="text-slate-500 col-span-full">No alerts found.</p>';
             return;
          }
-         document.getElementById('empty-alerts-msg').classList.add('hidden');
+         
+         grid.innerHTML = "";
 
          adminNotifs.forEach(notif => {
             const card = document.createElement("div");
@@ -798,6 +858,7 @@
             } else {
                 menuHTML = `
                    <button onclick="openRenameModal('${pName}', event)" class="block px-4 py-2 text-sm text-brand-600 w-full text-left hover:bg-brand-50 border-b border-slate-100 font-medium">Rename</button>
+                   <button onclick="openEventDateModal('${pName}', event)" class="block px-4 py-2 text-sm text-brand-600 w-full text-left hover:bg-brand-50 border-b border-slate-100 font-medium">Set Event Date</button>
                    <button onclick="toggleActive('${pName}', ${!p.isActive}, event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Set ${p.isActive ? 'Inactive' : 'Active'}</button>
                    <button onclick="archiveProject('${pName}', event)" class="block px-4 py-2 text-sm text-slate-700 w-full text-left hover:bg-slate-50 border-b border-slate-100">Archive</button>
                 `;
@@ -826,6 +887,7 @@
                  </div>
                  <div class="flex-1">
                     <h3 class="font-bold text-slate-800 text-lg mb-1 truncate">${pName}</h3>
+                     ${p.eventDate ? '<p class="text-xs text-slate-500 mt-0.5"><svg class="w-3 h-3 inline -mt-0.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>' + p.eventDate + '</p>' : ''}
                  </div>
                  <div class="flex items-center justify-between mt-3 flex-wrap gap-2">
                     ${badgeHTML}
@@ -986,23 +1048,27 @@
              const bgColor = isExpense
                ? 'bg-red-50/50 border-red-200'
                : isDone
-                 ? 'bg-green-700 border-green-800 text-white'
+                 ? 'bg-green-500 border-green-600'
                  : isBought
                    ? 'bg-green-100 border-green-300'
                    : 'bg-white border-slate-200';
              
+             const titleClass = isDone ? 'text-white' : 'text-slate-800';
+             const subtextClass = isDone ? 'text-green-50' : 'text-slate-500';
+
              itemRow.className = `flex justify-between items-center p-3 sm:p-4 border rounded-lg shadow-sm ${bgColor} hover:shadow-md transition`;
              itemRow.innerHTML = `
                 <div class="flex-1 truncate pr-2">
-                   <strong class="text-slate-800 text-sm sm:text-base">${item.itemName}</strong> <span class="text-slate-500 text-sm ml-1 bg-white border border-slate-200 px-1 rounded">x${item.qty}</span>
-                   <div class="text-[11px] sm:text-xs text-slate-500 mt-2 flex items-center gap-2">
-                      <span class="px-2 py-0.5 rounded border border-slate-200 bg-white shadow-sm font-medium ${isBought ? 'text-green-700' : (isExpense ? 'text-red-700' : 'text-slate-600')}">${item.status}</span>
-                      <span>Assign To: <span class="text-brand-600 font-semibold">${item.assignedTo || 'Unassigned'}</span></span>
+                   <strong class="${titleClass} text-sm sm:text-base">${item.itemName}</strong> <span class="${subtextClass} text-sm ml-1 ${isDone ? 'bg-green-600 border-green-500 text-white' : 'bg-white border-slate-200'} px-1 rounded">x${item.qty}</span>
+                   <div class="text-[11px] sm:text-xs ${subtextClass} mt-2 flex items-center gap-2">
+                      <span class="px-2 py-0.5 rounded border ${isDone ? 'border-green-400 bg-green-600 text-white' : 'border-slate-200 bg-white shadow-sm'} font-medium ${isBought && !isDone ? 'text-green-700' : (isExpense ? 'text-red-700' : (!isDone ? 'text-slate-600' : ''))}">${item.status}</span>
+                      <span>Assign To: <span class="${isDone ? 'text-white' : 'text-brand-600'} font-semibold">${item.assignedTo || 'Unassigned'}</span></span>
+                       ${item.dueDate ? '<span class="px-2 py-0.5 rounded border border-orange-200 bg-orange-50 text-orange-700 font-medium">Due: ' + item.dueDate + '</span>' : ''}
                    </div>
                 </div>
                 <div class="flex flex-col items-end gap-2 ml-2">
-                   <div class="text-xs font-medium bg-white border border-slate-200 shadow-sm text-slate-700 px-2.5 py-1 rounded inline-block whitespace-nowrap">${item.estPriceRange || '-'}</div>
-                   <button class="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 bg-brand-50 rounded" onclick="openEditItemModal('${projectName.replace(/'/g, "\\'")}','${item.itemName.replace(/'/g, "\\'")}', ${item.qty}, '${item.estPriceRange.replace(/'/g, "\\'")}', '${(item.assignedTo || '').replace(/'/g, "\\'")}', '${(item.status || 'Searching').replace(/'/g, "\\'")}')">Edit</button>
+                   <div class="text-xs font-medium ${isDone ? 'bg-green-600 border-green-500 text-white' : 'bg-white border-slate-200 text-slate-700'} shadow-sm px-2.5 py-1 rounded inline-block whitespace-nowrap">${item.estPriceRange || '-'}</div>
+                   <button class="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline px-2 py-1 bg-brand-50 rounded ${(isDone || isExpense) ? 'hidden' : ''}" onclick="openEditItemModal('${projectName.replace(/'/g, "\\'")}','${item.itemName.replace(/'/g, "\\'")}', ${item.qty}, '${(item.estPriceRange || '').replace(/'/g, "\\'")}', '${(item.assignedTo || '').replace(/'/g, "\\'")}', '${(item.status || 'Searching').replace(/'/g, "\\'")}')">Edit</button>
                 </div>
              `;
              if (isExpense) {
@@ -1076,6 +1142,7 @@
                estPriceTo: newPriceTo,
                estPriceRange: estPriceRange, 
                assignedTo,
+               dueDate: document.getElementById('edit-item-due-date').value || '',
                status
            };
 
@@ -1157,6 +1224,7 @@
          const priceFrom = ui.item.priceFrom.value.trim();
          const priceTo = ui.item.priceTo.value.trim();
          const assignedTo = ui.item.assign.value;
+         const dueDate = document.getElementById('new-item-due-date').value;
          
          if (!itemName) return;
 
@@ -1181,6 +1249,7 @@
              estPriceTo: priceTo,
              estPriceRange: estPriceString, 
              assignedTo, 
+             dueDate,
              referenceImageBase64: base64Image ? base64Image.split(',')[1] : "", // Strip data:image prefix
              id: Date.now() 
          });
